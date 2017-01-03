@@ -1,0 +1,16 @@
+#
+# files to ignore by git
+#
+
+# .files, emacs backup files, .o, .a, .tar, .gz
+.*
+*~
+.[oa]
+.tar
+.gz
+
+# ignore everything in build directory
+build/
+
+# include .gitignore
+!.gitignore
