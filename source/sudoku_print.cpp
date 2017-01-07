@@ -7,7 +7,7 @@ void sudoku_print(const Sudoku& sudoku, const string msg) {
   cout << msg << ":\n";
   for (int cnt=0;cnt<sudoku.total_size; ++cnt) {
     if (cnt>0 &&  cnt%sudoku.region_size==0 ) cout << "\n";
-    cout << setw(2) << sudoku.f[cnt];
+    cout << setw(2) << sudoku(cnt);
     if (cnt<sudoku.total_size-1) cout << ", ";
   }
   cout << "\n";
@@ -85,8 +85,8 @@ void sudoku_print_candidates(const Sudoku& sudoku, const string msg) {
   cout << msg << ", candidates:\n";
   for (int cnt=0;cnt<sudoku.total_size; ++cnt) {
     cout << setw(2) << cnt << ": {";
-    for (auto item=sudoku.candidates[cnt].cbegin(),
-	           end_of_list=sudoku.candidates[cnt].cend(),
+    for (auto item=sudoku.candidates(cnt).cbegin(),
+	           end_of_list=sudoku.candidates(cnt).cend(),
 	           last=prev(end_of_list);
 	           item!=end_of_list; ++item) {
       cout << setw(2) << *item;

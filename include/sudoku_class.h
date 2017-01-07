@@ -3,13 +3,13 @@
 
 #pragma once
 
-#include <iostream> //TODO: error handling in separate unit (dynamic_assert)
+#include <iostream>
 #include <new>
 #include <string>
 #include <list>
 #include <vector>
-#include <exception>        // terminate()
-#include <utility>          // pair<T,T>(), make_pair(), p
+#include <utility>          // pair<T,T>(), make_pair()
+#include "dyn_assert.h"     // dynamic_assert()
 
 using namespace std;
 
@@ -24,44 +24,40 @@ class Sudoku;  // forward declaration for access classes
 
 // access classes of Sudoku for various access schemes (row, col, block)
 class Row_access {
-  const Sudoku& ref;
+  Sudoku& ref;
 public:
-  Row_access(const Sudoku& _ref);    
+  Row_access(Sudoku& _ref);
+  // direct element access
   int& operator()(int i, int j);
-  int operator()(int i, int j) const;
+  const int& operator()(int i, int j) const;
 };
 
 class Col_access {
-  const Sudoku& ref;
+  Sudoku& ref;
 public:
-  Col_access(const Sudoku& _ref);
+  Col_access(Sudoku& _ref);
+  // direct element access
   int& operator()(int i, int j);
-  int operator()(int i, int j) const;
+  const int& operator()(int i, int j) const;
 };
 
 class Block_access {
-  const Sudoku& ref;
+  Sudoku& ref;
 public:
-  Block_access(const Sudoku& _ref);
+  Block_access(Sudoku& _ref);
+  // direct element access
   int& operator()(int i, int j);
-  int operator()(int i, int j) const;
+  const int& operator()(int i, int j) const;
 };
-
 
 
 class Sudoku {
 
-  // access regions
+  // access to regions
   friend class Row_access;
   friend class Col_access;
   friend class Block_access;
 
-  // printing
-  friend void sudoku_print(const Sudoku&, const string);
-  friend void sudoku_print_regions(const Sudoku&, const string);
-  friend void sudoku_print_cnt_to_x(const Sudoku&, const string);
-  friend void sudoku_print_candidates(const Sudoku&, const string);
-  
 public:
   
   const int region_size;    // no. of cells per region (= row / col / block)
@@ -75,6 +71,13 @@ public:
   Col_access   col;
   Block_access block;
 
+  // access to candidate lists
+  list<int>& candidates(int cnt);
+  const list<int>& candidates(int cnt) const;
+
+  list<int>& candidates(int i, int j);
+  const list<int>& candidates(int i, int j) const;
+  
   int row_to_cnt(int i,int j) const;
   int col_to_cnt(int i,int j) const;
   int block_to_cnt(int i, int j) const;
@@ -85,7 +88,6 @@ public:
   // helpers for checking 
   bool is_valid_index(int cnt) const;
   bool is_valid_index(int i, int j) const;
-  void dynamic_assert(bool assertion, string message) const;
 
   // constructors / destructors
   Sudoku(int _region_size, int _blocks_per_row, int _blocks_per_col);
@@ -96,15 +98,17 @@ public:
   Sudoku& operator=(const Sudoku&);
 
   // element access
-  int& operator()(int i);
-  int operator()(int i) const;
+  int& operator()(int cnt);
+  int operator()(int cnt) const;
   int& operator()(int i, int j);
   int operator()(int i, int j) const;
 
   // validation
-  bool is_valid() const;
+  bool is_valid() const;    // check for valid unique entries
+  int num_entries() const;  // return no. of entries != 0 (non empty entries)
+  int num_empty() const;    // return no. of entries == 0 (empty entries)
   
 private:
-  int* f;                        // contains Sudoku entries
-  vector<list<int>> candidates;  // contains list of candidates for each cell
+  int* f;                    // contains Sudoku entries
+  vector<list<int>> cand;    // contains list of candidates for each cell
 };

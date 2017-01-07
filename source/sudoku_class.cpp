@@ -4,55 +4,75 @@
 
 // access classes of Sudoku for various access schemes (row, col, block)
   
-Row_access::Row_access(const Sudoku& _ref) : ref(_ref) {}
+Row_access::Row_access(Sudoku& _ref) : ref(_ref) {}
     
 int& Row_access::operator()(int i, int j) {
   // i... row index
   // j... index within row
-  ref.dynamic_assert(ref.is_valid_index(i,j),"Index out of range.");
+  dynamic_assert(ref.is_valid_index(i,j),"Index out of range.");
   return ref.f[ref.row_to_cnt(i,j)];
 }
     
-int Row_access::operator()(int i, int j) const {
+const int& Row_access::operator()(int i, int j) const {
   // i... row index
   // j... index within row
-  ref.dynamic_assert(ref.is_valid_index(i,j),"Index out of range.");
+  dynamic_assert(ref.is_valid_index(i,j),"Index out of range.");
   return ref.f[ref.row_to_cnt(i,j)];
 }
 
   
-Col_access::Col_access(const Sudoku& _ref) : ref(_ref) {}
+Col_access::Col_access(Sudoku& _ref) : ref(_ref) {}
     
 int& Col_access::operator()(int i, int j) {
   // i... col index
   // j... index within col
-  ref.dynamic_assert(ref.is_valid_index(i,j),"Index out of range.");
+  dynamic_assert(ref.is_valid_index(i,j),"Index out of range.");
   return ref.f[ref.col_to_cnt(i,j)];
 }
 
-int Col_access::operator()(int i, int j) const {
+const int& Col_access::operator()(int i, int j) const {
   // i... col index
   // j... index within col
-  ref.dynamic_assert(ref.is_valid_index(i,j),"Index out of range.");
+  dynamic_assert(ref.is_valid_index(i,j),"Index out of range.");
   return ref.f[ref.col_to_cnt(i,j)];
 }
 
 
-Block_access::Block_access(const Sudoku& _ref) :
-  ref(_ref) {}
+Block_access::Block_access(Sudoku& _ref) : ref(_ref) {}
     
 int& Block_access::operator()(int i, int j) {
   // i... block index
   // j... index within block
-  ref.dynamic_assert(ref.is_valid_index(i,j),"Index out of range.");
+  dynamic_assert(ref.is_valid_index(i,j),"Index out of range.");
   return ref.f[ref.block_to_cnt(i,j)];
 }
 
-int Block_access::operator()(int i, int j) const {
+const int& Block_access::operator()(int i, int j) const {
   // i... block index
   // j... index within block
-  ref.dynamic_assert(ref.is_valid_index(i,j),"Index out of range.");
+  dynamic_assert(ref.is_valid_index(i,j),"Index out of range.");
   return ref.f[ref.block_to_cnt(i,j)];
+}
+
+
+list<int>& Sudoku::candidates(int cnt) {
+  dynamic_assert(is_valid_index(cnt),"Index out of range.");
+  return cand[cnt];
+}
+
+const list<int>& Sudoku::candidates(int cnt) const {
+  dynamic_assert(is_valid_index(cnt),"Index out of range.");
+  return cand[cnt];
+}
+
+list<int>& Sudoku::candidates(int i, int j) {
+  dynamic_assert(is_valid_index(i,j),"Index out of range.");
+  return cand[row_to_cnt(i,j)];
+}
+
+const list<int>& Sudoku::candidates(int i, int j) const {
+  dynamic_assert(is_valid_index(i,j),"Index out of range.");
+  return cand[row_to_cnt(i,j)];
 }
 
 //
@@ -83,10 +103,10 @@ Sudoku::Sudoku(int _region_size, int _blocks_per_row, int _blocks_per_col) :
   }
 
   // initialize and assign candidate lists for empty Sudoku
-  candidates.reserve(total_size);
+  cand.reserve(total_size);
   for (int cnt=0;cnt<total_size;++cnt) {
-    // candidates.push_back({});
-    candidates.push_back({1,2,3,4,5,6,7,8,9});
+    // cand.push_back({});
+    cand.push_back({1,2,3,4,5,6,7,8,9});
   }  
   
 }
@@ -108,14 +128,14 @@ Sudoku::Sudoku(const Sudoku& other_Sudoku) :
   f = new int[total_size];
   
   // copy member array
-  for (int i=0;i<total_size;++i) {
-    f[i]=other_Sudoku.f[i];
+  for (int cnt=0;cnt<total_size;++cnt) {
+    f[cnt]=other_Sudoku.f[cnt];
   }
 
   // initialize and assign candidate lists
-  candidates.reserve(total_size);
+  cand.reserve(total_size);
   for (int cnt=0;cnt<total_size;++cnt) {
-    candidates.push_back(other_Sudoku.candidates[cnt]);
+    cand.push_back(other_Sudoku.cand[cnt]);
   }
   
 }
@@ -141,7 +161,7 @@ Sudoku& Sudoku::operator=(const Sudoku& other_Sudoku) {
       
     copy(&other_Sudoku.f[0], &other_Sudoku.f[0] + size_t(total_size), &f[0]);
     for (int cnt=0;cnt<total_size;++cnt) {
-      candidates[cnt]=other_Sudoku.candidates[cnt];
+      cand[cnt]=other_Sudoku.cand[cnt];
     }  
   }
   return *this;
@@ -153,16 +173,6 @@ bool Sudoku::is_valid_index(int i) const {
 
 bool Sudoku::is_valid_index(int i, int j) const {
   return ((i>=0) && (i<region_size) && (j>=0) && (j<region_size));
-}
-
-void Sudoku::dynamic_assert(bool assertion, string message) const {
-  if (assertion) {
-    return;
-  } else {
-    cout << message << "\n";
-    cout << "Terminating.\n";
-    terminate();
-  }
 }
 
 int& Sudoku::operator()(int cnt) {
@@ -262,21 +272,66 @@ pair<int,int> Sudoku::cnt_to_block(int cnt) const {
 }
 
 
-
 bool Sudoku::is_valid() const {
 
   // check for valid entry values:
   // 0 (=empty indicator, is valid too), valid entries: 1..region_size
-  for(int cnt=0;cnt<total_size;++cnt) {
+  for (int cnt=0;cnt<total_size;++cnt) {
     if (f[cnt]<0 || f[cnt]>region_size) {
       return false;
     }
   }
 
-  // check for unique entries in each region
-  // if ( !regions_have_unique_entries(rows)   ) { std::cout << "rows!"; return false; }
-  // if ( !regions_have_unique_entries(cols)   ) { std::cout << "cols!"; return false; }
-  // if ( !regions_have_unique_entries(blocks) ) { std::cout << "blocks!"; return false; }
+  // check for unique entries in rows
+  for (int cnt=0;cnt<region_size;++cnt) { // for each row
+    for (int value=1;value<=region_size;++value) { // for each potential value
+      int count=0;
+      for (int pos=0;pos<region_size;++pos) { // occurences at each position
+	if (row(cnt,pos)==value) ++count;
+      }
+      if (count>1) return false;
+    }
+  }
+
+  // check for unique entries in cols
+  for (int cnt=0;cnt<region_size;++cnt) { // for each col
+    for (int value=1;value<=region_size;++value) { // for each potential value
+      int count=0;
+      for (int pos=0;pos<region_size;++pos) { // occurences at each position
+	if (col(cnt,pos)==value) ++count;
+      }
+      if (count>1) return false;
+    }
+  }
+
+  // check for unique entries in blocks
+  for (int cnt=0;cnt<region_size;++cnt) { // for each block
+    for (int value=1;value<=region_size;++value) { // for each potential value
+      int count=0;
+      for (int pos=0;pos<region_size;++pos) { // occurences at each position
+	if (block(cnt,pos)==value) ++count;
+      }
+      if (count>1) return false;
+    }
+  }
 
   return true;
 }
+
+
+int Sudoku::num_entries() const {
+
+  // return no. of entries > 0
+  int count=0;
+  for (int cnt=0; cnt<total_size; ++cnt) {
+    if (f[cnt] > 0) ++count;
+  }
+  return count;
+}
+
+int Sudoku::num_empty() const {
+
+  // return no. of empty entries, i.e. entries with value 0
+  return total_size - num_entries();
+}
+
