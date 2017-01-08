@@ -5,53 +5,72 @@
 // access classes of Sudoku for various access schemes (row, col, block)
   
 Row_access::Row_access(Sudoku& _ref) : ref(_ref) {}
+
+void Row_access::init_row_access() {
+  for (int i=0;i<ref.region_size;++i)
+    for (int j=0;j<ref.region_size;++j)
+      r.push_back(&ref.f[ref.row_to_cnt(i,j)]); // set links for rows 
+}
     
 int& Row_access::operator()(int i, int j) {
   // i... row index
   // j... index within row
   dynamic_assert(ref.is_valid_index(i,j),"Index out of range.");
-  return ref.f[ref.row_to_cnt(i,j)];
+  return *r[ref.row_to_cnt(i,j)];
 }
     
 const int& Row_access::operator()(int i, int j) const {
   // i... row index
   // j... index within row
   dynamic_assert(ref.is_valid_index(i,j),"Index out of range.");
-  return ref.f[ref.row_to_cnt(i,j)];
+  return *r[ref.row_to_cnt(i,j)];
 }
 
   
 Col_access::Col_access(Sudoku& _ref) : ref(_ref) {}
-    
+
+void Col_access::init_col_access() {
+  for (int i=0;i<ref.region_size;++i)
+    for (int j=0;j<ref.region_size;++j)
+      c.push_back(&ref.f[ref.col_to_cnt(i,j)]); // set links for cols 
+}
+
 int& Col_access::operator()(int i, int j) {
   // i... col index
   // j... index within col
   dynamic_assert(ref.is_valid_index(i,j),"Index out of range.");
-  return ref.f[ref.col_to_cnt(i,j)];
+  return *c[ref.row_to_cnt(i,j)];  // use row conversion for 2D array mem_order
 }
 
 const int& Col_access::operator()(int i, int j) const {
   // i... col index
   // j... index within col
   dynamic_assert(ref.is_valid_index(i,j),"Index out of range.");
-  return ref.f[ref.col_to_cnt(i,j)];
+  return *c[ref.row_to_cnt(i,j)];  // use row conversion for 2D array mem_order
+
 }
 
 
 Block_access::Block_access(Sudoku& _ref) : ref(_ref) {}
-    
+
+void Block_access::init_block_access() {
+  for (int i=0;i<ref.region_size;++i)
+    for (int j=0;j<ref.region_size;++j)
+      b.push_back(&ref.f[ref.block_to_cnt(i,j)]); // set links for blocks
+}
+
 int& Block_access::operator()(int i, int j) {
   // i... block index
   // j... index within block
   dynamic_assert(ref.is_valid_index(i,j),"Index out of range.");
-  return ref.f[ref.block_to_cnt(i,j)];
+  return *b[ref.row_to_cnt(i,j)];  // use row conversion for 2D array mem_order
 }
 
 const int& Block_access::operator()(int i, int j) const {
   // i... block index
   // j... index within block
   dynamic_assert(ref.is_valid_index(i,j),"Index out of range.");
-  return ref.f[ref.block_to_cnt(i,j)];
+  return *b[ref.row_to_cnt(i,j)];  // use row conversion for 2D array mem_order
 }
 
 
@@ -95,20 +114,20 @@ Sudoku::Sudoku(int _region_size, int _blocks_per_row, int _blocks_per_col) :
 		 region_size%blocks_per_row ==0,
 		 "Invalid Sudoku parameters.");
   
-  f = new int[total_size];
-  
   // initialize member array as empty Sudoku
   for (int cnt=0;cnt<total_size;++cnt) {
-    f[cnt]=0;
+    f.push_back(0);
   }
 
   // initialize and assign candidate lists for empty Sudoku
-  cand.reserve(total_size);
   for (int cnt=0;cnt<total_size;++cnt) {
-    // cand.push_back({});
     cand.push_back({1,2,3,4,5,6,7,8,9});
-  }  
-  
+  }
+
+  // initialize links for region access
+  row.init_row_access();
+  col.init_col_access();
+  block.init_block_access();
 }
 
 //
@@ -125,11 +144,9 @@ Sudoku::Sudoku(const Sudoku& other_Sudoku) :
 
   // cout << "copy constructor called.\n";
   
-  f = new int[total_size];
-  
   // copy member array
   for (int cnt=0;cnt<total_size;++cnt) {
-    f[cnt]=other_Sudoku.f[cnt];
+    f.push_back(other_Sudoku.f[cnt]);
   }
 
   // initialize and assign candidate lists
@@ -137,12 +154,11 @@ Sudoku::Sudoku(const Sudoku& other_Sudoku) :
   for (int cnt=0;cnt<total_size;++cnt) {
     cand.push_back(other_Sudoku.cand[cnt]);
   }
-  
-}
 
-Sudoku::~Sudoku() {
-  // cout << "destructor called.\n";
-  delete[] f;
+  // initialize links for region access
+  row.init_row_access();
+  col.init_col_access();
+  block.init_block_access();
 }
 
 // assignment
@@ -159,10 +175,15 @@ Sudoku& Sudoku::operator=(const Sudoku& other_Sudoku) {
 		     (total_size == other_Sudoku.total_size)),
 		    "Invalid assignment. Layout of source and destination must be identical.");
       
-    copy(&other_Sudoku.f[0], &other_Sudoku.f[0] + size_t(total_size), &f[0]);
     for (int cnt=0;cnt<total_size;++cnt) {
+      f[cnt]=other_Sudoku.f[cnt];
       cand[cnt]=other_Sudoku.cand[cnt];
-    }  
+    }
+    
+    // initialize links for region access
+    row.init_row_access();
+    col.init_col_access();
+    block.init_block_access();
   }
   return *this;
 }
@@ -180,19 +201,19 @@ int& Sudoku::operator()(int cnt) {
   return f[cnt];
 }
 
-int Sudoku::operator()(int cnt) const {
+const int& Sudoku::operator()(int cnt) const {
   dynamic_assert(is_valid_index(cnt),"Index out of range.");
   return f[cnt];
 }
 
 int& Sudoku::operator()(int i, int j) {
   dynamic_assert(is_valid_index(i,j),"Index out of range.");
-  return f[row_to_cnt(i,j)];
+  return f[row_to_cnt(i,j)];   // use row conversion for 2D array mem_order
 }
 
-int Sudoku::operator()(int i, int j) const {
+const int& Sudoku::operator()(int i, int j) const {
   dynamic_assert(is_valid_index(i,j),"Index out of range.");
-  return f[row_to_cnt(i,j)];
+  return f[row_to_cnt(i,j)];  // use row conversion for 2D array mem_order
 }
 
 int Sudoku::row_to_cnt(int i, int j) const {

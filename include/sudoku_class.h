@@ -4,7 +4,6 @@
 #pragma once
 
 #include <iostream>
-#include <new>
 #include <string>
 #include <list>
 #include <vector>
@@ -25,8 +24,11 @@ class Sudoku;  // forward declaration for access classes
 // access classes of Sudoku for various access schemes (row, col, block)
 class Row_access {
   Sudoku& ref;
+  vector<int*> r;
 public:
   Row_access(Sudoku& _ref);
+  void init_row_access(); // to be called AFTER Sudoku constructor is finished
+                         // (Sudoku must be fully constructed to set links!)
   // direct element access
   int& operator()(int i, int j);
   const int& operator()(int i, int j) const;
@@ -34,8 +36,11 @@ public:
 
 class Col_access {
   Sudoku& ref;
+  vector<int*> c;
 public:
   Col_access(Sudoku& _ref);
+  void init_col_access(); // to be called AFTER Sudoku constructor is finished
+                         // (Sudoku must be fully constructed to set links!)
   // direct element access
   int& operator()(int i, int j);
   const int& operator()(int i, int j) const;
@@ -43,8 +48,11 @@ public:
 
 class Block_access {
   Sudoku& ref;
+  vector<int*> b;
 public:
   Block_access(Sudoku& _ref);
+  void init_block_access(); // to be called AFTER Sudoku constructor is finished
+                           // (Sudoku must be fully constructed to set links!)  
   // direct element access
   int& operator()(int i, int j);
   const int& operator()(int i, int j) const;
@@ -92,16 +100,15 @@ public:
   // constructors / destructors
   Sudoku(int _region_size, int _blocks_per_row, int _blocks_per_col);
   Sudoku(const Sudoku& other_Sudoku); 
-  ~Sudoku();
 
   // assignment
   Sudoku& operator=(const Sudoku&);
 
   // element access
   int& operator()(int cnt);
-  int operator()(int cnt) const;
+  const int& operator()(int cnt) const;
   int& operator()(int i, int j);
-  int operator()(int i, int j) const;
+  const int& operator()(int i, int j) const;
 
   // validation
   bool is_valid() const;    // check for valid unique entries
@@ -109,6 +116,6 @@ public:
   int num_empty() const;    // return no. of entries == 0 (empty entries)
   
 private:
-  int* f;                    // contains Sudoku entries
-  vector<list<int>> cand;    // contains list of candidates for each cell
+  vector<int> f;            // contains Sudoku entries
+  vector<list<int>> cand;   // contains list of candidates for each cell
 };

@@ -4,9 +4,11 @@
 
 void sudoku_print(const Sudoku& sudoku, const string msg) {
 
-  cout << msg << ":\n";
+  cout << msg << ":";
   for (int cnt=0;cnt<sudoku.total_size; ++cnt) {
-    if (cnt>0 &&  cnt%sudoku.region_size==0 ) cout << "\n";
+    if (cnt>=0 &&  cnt%sudoku.region_size==0 ) {
+      cout << "\n" << cnt/sudoku.region_size << ": ";
+    }
     cout << setw(2) << sudoku(cnt);
     if (cnt<sudoku.total_size-1) cout << ", ";
   }
