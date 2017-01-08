@@ -7,96 +7,131 @@
 Row_access::Row_access(Sudoku& _ref) : ref(_ref) {}
 
 void Row_access::init_row_access() {
-  for (int i=0;i<ref.region_size;++i)
-    for (int j=0;j<ref.region_size;++j)
-      r.push_back(&ref.f[ref.row_to_cnt(i,j)]); // set links for rows 
+  for (int i=0;i<ref.region_size;++i) {
+    vector<int*> rh;
+    for (int j=0;j<ref.region_size;++j) {
+      // set links within row
+      rh.push_back(&ref.f[ref.row_to_cnt(i,j)]);
+    }
+    // add row vector
+    r.push_back(rh);
+  }
+}
+
+vector<int*>& Row_access::operator()(int cnt) {
+  // i... row index
+  dynamic_assert(ref.is_valid_region_index(cnt),"Index out of range.");
+  return r[cnt];
 }
     
+const vector<int*>& Row_access::operator()(int cnt) const {
+  // i... row index
+  dynamic_assert(ref.is_valid_region_index(cnt),"Index out of range.");
+  return r[cnt];
+}
+
 int& Row_access::operator()(int i, int j) {
   // i... row index
   // j... index within row
-  dynamic_assert(ref.is_valid_index(i,j),"Index out of range.");
-  return *r[ref.row_to_cnt(i,j)];
+  dynamic_assert(ref.is_valid_region_index(i,j),"Index out of range.");
+  return *r[i][j];
 }
     
 const int& Row_access::operator()(int i, int j) const {
   // i... row index
   // j... index within row
-  dynamic_assert(ref.is_valid_index(i,j),"Index out of range.");
-  return *r[ref.row_to_cnt(i,j)];
+  dynamic_assert(ref.is_valid_region_index(i,j),"Index out of range.");
+  return *r[i][j];
 }
 
-  
+
 Col_access::Col_access(Sudoku& _ref) : ref(_ref) {}
 
 void Col_access::init_col_access() {
-  for (int i=0;i<ref.region_size;++i)
-    for (int j=0;j<ref.region_size;++j)
-      c.push_back(&ref.f[ref.col_to_cnt(i,j)]); // set links for cols 
+  for (int i=0;i<ref.region_size;++i) {
+    vector<int*> ch;
+    for (int j=0;j<ref.region_size;++j) {
+      // set links within col
+      ch.push_back(&ref.f[ref.col_to_cnt(i,j)]);
+    }
+    // add col vector
+    c.push_back(ch);
+  }
+}
+
+vector<int*>& Col_access::operator()(int cnt) {
+  // i... col index
+  dynamic_assert(ref.is_valid_region_index(cnt),"Index out of range.");
+  return c[cnt];
+}
+    
+const vector<int*>& Col_access::operator()(int cnt) const {
+  // i... col index
+  dynamic_assert(ref.is_valid_region_index(cnt),"Index out of range.");
+  return c[cnt];
 }
 
 int& Col_access::operator()(int i, int j) {
   // i... col index
   // j... index within col
-  dynamic_assert(ref.is_valid_index(i,j),"Index out of range.");
-  return *c[ref.row_to_cnt(i,j)];  // use row conversion for 2D array mem_order
+  dynamic_assert(ref.is_valid_region_index(i,j),"Index out of range.");
+  return *c[i][j];
 }
-
+    
 const int& Col_access::operator()(int i, int j) const {
   // i... col index
   // j... index within col
-  dynamic_assert(ref.is_valid_index(i,j),"Index out of range.");
-  return *c[ref.row_to_cnt(i,j)];  // use row conversion for 2D array mem_order
-
+  dynamic_assert(ref.is_valid_region_index(i,j),"Index out of range.");
+  return *c[i][j];
 }
 
 
 Block_access::Block_access(Sudoku& _ref) : ref(_ref) {}
 
 void Block_access::init_block_access() {
-  for (int i=0;i<ref.region_size;++i)
-    for (int j=0;j<ref.region_size;++j)
-      b.push_back(&ref.f[ref.block_to_cnt(i,j)]); // set links for blocks
+  for (int i=0;i<ref.region_size;++i) {
+    vector<int*> bh;
+    for (int j=0;j<ref.region_size;++j) {
+      // set links within block
+      bh.push_back(&ref.f[ref.block_to_cnt(i,j)]);
+    }
+    // add block vector
+    b.push_back(bh);
+  }
+}
+
+vector<int*>& Block_access::operator()(int cnt) {
+  // i... block index
+  dynamic_assert(ref.is_valid_region_index(cnt),"Index out of range.");
+  return b[cnt];
+}
+    
+const vector<int*>& Block_access::operator()(int cnt) const {
+  // i... block index
+  dynamic_assert(ref.is_valid_region_index(cnt),"Index out of range.");
+  return b[cnt];
 }
 
 int& Block_access::operator()(int i, int j) {
   // i... block index
   // j... index within block
-  dynamic_assert(ref.is_valid_index(i,j),"Index out of range.");
-  return *b[ref.row_to_cnt(i,j)];  // use row conversion for 2D array mem_order
+  dynamic_assert(ref.is_valid_region_index(i,j),"Index out of range.");
+  return *b[i][j];
 }
-
+    
 const int& Block_access::operator()(int i, int j) const {
   // i... block index
   // j... index within block
-  dynamic_assert(ref.is_valid_index(i,j),"Index out of range.");
-  return *b[ref.row_to_cnt(i,j)];  // use row conversion for 2D array mem_order
+  dynamic_assert(ref.is_valid_region_index(i,j),"Index out of range.");
+  return *b[i][j];
 }
 
-
-list<int>& Sudoku::candidates(int cnt) {
-  dynamic_assert(is_valid_index(cnt),"Index out of range.");
-  return cand[cnt];
-}
-
-const list<int>& Sudoku::candidates(int cnt) const {
-  dynamic_assert(is_valid_index(cnt),"Index out of range.");
-  return cand[cnt];
-}
-
-list<int>& Sudoku::candidates(int i, int j) {
-  dynamic_assert(is_valid_index(i,j),"Index out of range.");
-  return cand[row_to_cnt(i,j)];
-}
-
-const list<int>& Sudoku::candidates(int i, int j) const {
-  dynamic_assert(is_valid_index(i,j),"Index out of range.");
-  return cand[row_to_cnt(i,j)];
-}
-
+////////////////////////////////////////////////////////////////////////////////
 //
 // Sudoku regular constructor
 //
+////////////////////////////////////////////////////////////////////////////////
+
 Sudoku::Sudoku(int _region_size, int _blocks_per_row, int _blocks_per_col) :
   region_size(_region_size),
   blocks_per_row(_blocks_per_row),
@@ -188,13 +223,6 @@ Sudoku& Sudoku::operator=(const Sudoku& other_Sudoku) {
   return *this;
 }
 
-bool Sudoku::is_valid_index(int i) const {
-  return ((i>=0) && (i<total_size));
-}
-
-bool Sudoku::is_valid_index(int i, int j) const {
-  return ((i>=0) && (i<region_size) && (j>=0) && (j<region_size));
-}
 
 int& Sudoku::operator()(int cnt) {
   dynamic_assert(is_valid_index(cnt),"Index out of range.");
@@ -207,13 +235,33 @@ const int& Sudoku::operator()(int cnt) const {
 }
 
 int& Sudoku::operator()(int i, int j) {
-  dynamic_assert(is_valid_index(i,j),"Index out of range.");
+  dynamic_assert(is_valid_region_index(i,j),"Index out of range.");
   return f[row_to_cnt(i,j)];   // use row conversion for 2D array mem_order
 }
 
 const int& Sudoku::operator()(int i, int j) const {
-  dynamic_assert(is_valid_index(i,j),"Index out of range.");
+  dynamic_assert(is_valid_region_index(i,j),"Index out of range.");
   return f[row_to_cnt(i,j)];  // use row conversion for 2D array mem_order
+}
+
+list<int>& Sudoku::candidates(int cnt) {
+  dynamic_assert(is_valid_index(cnt),"Index out of range.");
+  return cand[cnt];
+}
+
+const list<int>& Sudoku::candidates(int cnt) const {
+  dynamic_assert(is_valid_index(cnt),"Index out of range.");
+  return cand[cnt];
+}
+
+list<int>& Sudoku::candidates(int i, int j) {
+  dynamic_assert(is_valid_region_index(i,j),"Index out of range.");
+  return cand[row_to_cnt(i,j)];
+}
+
+const list<int>& Sudoku::candidates(int i, int j) const {
+  dynamic_assert(is_valid_region_index(i,j),"Index out of range.");
+  return cand[row_to_cnt(i,j)];
 }
 
 int Sudoku::row_to_cnt(int i, int j) const {
@@ -293,46 +341,59 @@ pair<int,int> Sudoku::cnt_to_block(int cnt) const {
 }
 
 
+bool Sudoku::is_valid_index(int i) const {
+  return ((i >= 0) && (i < total_size));
+}
+
+bool Sudoku::is_valid_region_index(int i) const {
+  return ((i >= 0) && (i < region_size));
+}
+
+bool Sudoku::is_valid_region_index(int i, int j) const {
+  return ((i >= 0) && (i < region_size) && (j >= 0) && (j < region_size));
+}
+
+
 bool Sudoku::is_valid() const {
 
   // check for valid entry values:
   // 0 (=empty indicator, is valid too), valid entries: 1..region_size
-  for (int cnt=0;cnt<total_size;++cnt) {
-    if (f[cnt]<0 || f[cnt]>region_size) {
+  for (int cnt=0;cnt < total_size;++cnt) {
+    if (f[cnt] < 0 || f[cnt] > region_size) {
       return false;
     }
   }
 
   // check for unique entries in rows
-  for (int cnt=0;cnt<region_size;++cnt) { // for each row
-    for (int value=1;value<=region_size;++value) { // for each potential value
+  for (int cnt=0;cnt < region_size;++cnt) { // for each row
+    for (int value=1;value <= region_size;++value) { // for each potential value
       int count=0;
-      for (int pos=0;pos<region_size;++pos) { // occurences at each position
-	if (row(cnt,pos)==value) ++count;
+      for (int pos=0;pos < region_size;++pos) { // occurences at each position
+	if (row(cnt,pos) == value) ++count;
       }
-      if (count>1) return false;
+      if (count > 1) return false;
     }
   }
 
   // check for unique entries in cols
-  for (int cnt=0;cnt<region_size;++cnt) { // for each col
-    for (int value=1;value<=region_size;++value) { // for each potential value
+  for (int cnt=0;cnt < region_size;++cnt) { // for each col
+    for (int value=1;value <= region_size;++value) { // for each potential value
       int count=0;
-      for (int pos=0;pos<region_size;++pos) { // occurences at each position
-	if (col(cnt,pos)==value) ++count;
+      for (int pos=0;pos < region_size;++pos) { // occurences at each position
+	if (col(cnt,pos) == value) ++count;
       }
-      if (count>1) return false;
+      if (count > 1) return false;
     }
   }
 
   // check for unique entries in blocks
-  for (int cnt=0;cnt<region_size;++cnt) { // for each block
-    for (int value=1;value<=region_size;++value) { // for each potential value
+  for (int cnt=0;cnt < region_size;++cnt) { // for each block
+    for (int value=1;value <= region_size;++value) { // for each potential value
       int count=0;
-      for (int pos=0;pos<region_size;++pos) { // occurences at each position
-	if (block(cnt,pos)==value) ++count;
+      for (int pos=0;pos < region_size;++pos) { // occurences at each position
+	if (block(cnt,pos) == value) ++count;
       }
-      if (count>1) return false;
+      if (count > 1) return false;
     }
   }
 
@@ -344,7 +405,7 @@ int Sudoku::num_entries() const {
 
   // return no. of entries > 0
   int count=0;
-  for (int cnt=0; cnt<total_size; ++cnt) {
+  for (int cnt=0; cnt < total_size; ++cnt) {
     if (f[cnt] > 0) ++count;
   }
   return count;
@@ -355,4 +416,3 @@ int Sudoku::num_empty() const {
   // return no. of empty entries, i.e. entries with value 0
   return total_size - num_entries();
 }
-

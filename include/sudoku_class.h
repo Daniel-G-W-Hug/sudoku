@@ -15,7 +15,7 @@ using namespace std;
 //
 // interface class Sudoku
 //
-// Sudoku keeps track of data structure to represent and solve a sudoku of arbitrary size
+// Sudoku keeps track of data structure to represent a sudoku of arbitrary size
 //
 
 class Sudoku;  // forward declaration for access classes
@@ -24,36 +24,42 @@ class Sudoku;  // forward declaration for access classes
 // access classes of Sudoku for various access schemes (row, col, block)
 class Row_access {
   Sudoku& ref;
-  vector<int*> r;
+  vector<vector<int*>> r;  // vector of row vectors
 public:
   Row_access(Sudoku& _ref);
-  void init_row_access(); // to be called AFTER Sudoku constructor is finished
-                         // (Sudoku must be fully constructed to set links!)
-  // direct element access
+  void init_row_access();  // to be called AFTER Sudoku entries are set up
+  // access to row(cnt)
+  vector<int*>& operator()(int cnt);
+  const vector<int*>& operator()(int cnt) const;
+  // element access at row(i,j)
   int& operator()(int i, int j);
   const int& operator()(int i, int j) const;
 };
 
 class Col_access {
   Sudoku& ref;
-  vector<int*> c;
+  vector<vector<int*>> c;
 public:
   Col_access(Sudoku& _ref);
-  void init_col_access(); // to be called AFTER Sudoku constructor is finished
-                         // (Sudoku must be fully constructed to set links!)
-  // direct element access
+  void init_col_access();  // to be called AFTER Sudoku entries are set up
+  // access to col(cnt)
+  vector<int*>& operator()(int cnt);
+  const vector<int*>& operator()(int cnt) const;
+  // element access at col(i,j)
   int& operator()(int i, int j);
   const int& operator()(int i, int j) const;
 };
 
 class Block_access {
   Sudoku& ref;
-  vector<int*> b;
+  vector<vector<int*>> b;
 public:
   Block_access(Sudoku& _ref);
-  void init_block_access(); // to be called AFTER Sudoku constructor is finished
-                           // (Sudoku must be fully constructed to set links!)  
-  // direct element access
+  void init_block_access();  // to be called AFTER Sudoku entries are set up
+  // access to block(cnt)
+  vector<int*>& operator()(int cnt);
+  const vector<int*>& operator()(int cnt) const;
+  // element access at block(i,j)
   int& operator()(int i, int j);
   const int& operator()(int i, int j) const;
 };
@@ -66,6 +72,9 @@ class Sudoku {
   friend class Col_access;
   friend class Block_access;
 
+  vector<int> f;            // contains Sudoku entries
+  vector<list<int>> cand;   // contains list of candidates for each cell
+
 public:
   
   const int region_size;    // no. of cells per region (= row / col / block)
@@ -73,6 +82,19 @@ public:
   const int blocks_per_col; // no. of blocks in "y-direction"
   const int total_size;     // total size of sudoku = region_size*region_size
 
+  // constructors
+  Sudoku(int _region_size, int _blocks_per_row, int _blocks_per_col);
+  Sudoku(const Sudoku& other_Sudoku); 
+
+  // assignment
+  Sudoku& operator=(const Sudoku&);
+
+  // element access
+  int& operator()(int cnt);
+  const int& operator()(int cnt) const;
+  int& operator()(int i, int j);
+  const int& operator()(int i, int j) const;
+  
   // provide cell access in various forms for regions
   // (all addressing the same memory)
   Row_access   row;
@@ -95,27 +117,12 @@ public:
 
   // helpers for checking 
   bool is_valid_index(int cnt) const;
-  bool is_valid_index(int i, int j) const;
-
-  // constructors / destructors
-  Sudoku(int _region_size, int _blocks_per_row, int _blocks_per_col);
-  Sudoku(const Sudoku& other_Sudoku); 
-
-  // assignment
-  Sudoku& operator=(const Sudoku&);
-
-  // element access
-  int& operator()(int cnt);
-  const int& operator()(int cnt) const;
-  int& operator()(int i, int j);
-  const int& operator()(int i, int j) const;
+  bool is_valid_region_index(int cnt) const;
+  bool is_valid_region_index(int i, int j) const;
 
   // validation
-  bool is_valid() const;    // check for valid unique entries
+  bool is_valid() const;    // check for valid and unique entries in each region
   int num_entries() const;  // return no. of entries != 0 (non empty entries)
   int num_empty() const;    // return no. of entries == 0 (empty entries)
-  
-private:
-  vector<int> f;            // contains Sudoku entries
-  vector<list<int>> cand;   // contains list of candidates for each cell
+
 };

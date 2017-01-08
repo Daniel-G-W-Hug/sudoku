@@ -17,7 +17,7 @@ using namespace std;
 //  (made friend of Sudoku in Sudoku_class.h)
 //
 
-void sudoku_print(const Sudoku& sudoku, const string msg);
-void sudoku_print_regions(const Sudoku& sudoku, const string msg);
-void sudoku_print_cnt_to_x(const Sudoku& sudoku, const string msg);
-void sudoku_print_candidates(const Sudoku& sudoku, const string msg);
+void sudoku_print(const Sudoku& s, const string msg);
+void sudoku_print_regions(const Sudoku& s, const string msg);
+void sudoku_print_cnt_to_x(const Sudoku& s, const string msg);
+void sudoku_print_candidates(const Sudoku& s, const string msg);

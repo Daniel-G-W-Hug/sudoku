@@ -36,9 +36,9 @@ int main(int argc, char* argv[]) {
   }
   
   // sudoku_print(s,"s"); cout << "\n\n";
-  sudoku_print_regions(s,"s_regions"); cout << "\n\n";
+  // sudoku_print_regions(s,"s_regions"); cout << "\n\n";
   // sudoku_print_cnt_to_x(s,"cnt_to_x"); cout << "\n\n";
-  // sudoku_print_candidates(s,"s"); cout << "\n\n";  
+  sudoku_print_candidates(s,"s"); cout << "\n\n";  
 
   cout << "num_entries() = " << s.num_entries() << "\n";
   cout << "num_empty()   = " << s.num_empty() << "\n";
