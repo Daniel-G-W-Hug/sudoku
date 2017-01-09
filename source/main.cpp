@@ -34,6 +34,8 @@ int main(int argc, char* argv[]) {
     cout << "\nInvalid sudoku! Program terminated.\n";
     return -1;
   }
+
+  s.update_candidate_list_of_all_cells();
   
   // sudoku_print(s,"s"); cout << "\n\n";
   // sudoku_print_regions(s,"s_regions"); cout << "\n\n";

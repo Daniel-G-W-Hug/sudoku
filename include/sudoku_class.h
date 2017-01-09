@@ -107,6 +107,11 @@ public:
 
   list<int>& candidates(int i, int j);
   const list<int>& candidates(int i, int j) const;
+
+  // update candidate lists
+  // void remove_candidate_from_list_of_cell(int cnt, int value);
+  void update_candidate_list_of_cell(int cnt);
+  void update_candidate_list_of_all_cells();
   
   int row_to_cnt(int i,int j) const;
   int col_to_cnt(int i,int j) const;
