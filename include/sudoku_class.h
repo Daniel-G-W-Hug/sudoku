@@ -107,11 +107,6 @@ public:
 
   list<int>& candidates(int i, int j);
   const list<int>& candidates(int i, int j) const;
-
-  // update candidate lists
-  // void remove_candidate_from_list_of_cell(int cnt, int value);
-  void update_candidate_list_of_cell(int cnt);
-  void update_candidate_list_of_all_cells();
   
   int row_to_cnt(int i,int j) const;
   int col_to_cnt(int i,int j) const;
@@ -120,14 +115,14 @@ public:
   pair<int,int> cnt_to_col(int cnt) const;
   pair<int,int> cnt_to_block(int cnt) const;
 
-  // helpers for checking 
+  // helpers for checking index values
   bool is_valid_index(int cnt) const;
   bool is_valid_region_index(int cnt) const;
   bool is_valid_region_index(int i, int j) const;
 
-  // validation
-  bool is_valid() const;    // check for valid and unique entries in each region
-  int num_entries() const;  // return no. of entries != 0 (non empty entries)
-  int num_empty() const;    // return no. of entries == 0 (empty entries)
+  // validation of sudoku
+  bool is_valid() const;       // valid and unique entries in each region
+  int num_entries() const;     // return no. of entries != 0 (non empty entries)
+  int num_empty() const;       // return no. of entries == 0 (empty entries)
 
 };

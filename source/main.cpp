@@ -2,6 +2,7 @@
 #include "sudoku_class.h"
 #include "sudoku_read.h"
 #include "sudoku_print.h"
+#include "sudoku_solve.h"
 
 #include <iostream>
 
@@ -26,24 +27,37 @@ int main(int argc, char* argv[]) {
   for(int cnt=0;cnt<s.total_size;++cnt) {
     s(cnt)=read_int();
   }
-
-  sudoku_print(s,"s"); cout << "\n\n";
   
   // check for valid sudoku
   if (!s.is_valid()) {
     cout << "\nInvalid sudoku! Program terminated.\n";
     return -1;
   }
+  sudoku_update_candidates_all_cells(s);
 
-  s.update_candidate_list_of_all_cells();
   
-  // sudoku_print(s,"s"); cout << "\n\n";
+  sudoku_print(s,"s"); cout << "\n\n";
   // sudoku_print_regions(s,"s_regions"); cout << "\n\n";
   // sudoku_print_cnt_to_x(s,"cnt_to_x"); cout << "\n\n";
   sudoku_print_candidates(s,"s"); cout << "\n\n";  
 
-  cout << "num_entries() = " << s.num_entries() << "\n";
-  cout << "num_empty()   = " << s.num_empty() << "\n";
+  cout << "s.num_entries()   = " << s.num_entries() << "\n";
+  cout << "s.num_empty()     = " << s.num_empty() << "\n";
+  cout << "has_candidates(s) = " << boolalpha << has_candidates(s) << "\n\n";
+
+
+  while (has_singles(s)) {
+    
+    int removed = sudoku_remove_singles(s);
+
+    cout << "no. of removed singles: " << removed << "\n";
+    sudoku_print(s,"s"); cout << "\n\n";
+    sudoku_print_candidates(s,"s"); cout << "\n\n";  
+
+    cout << "s.num_entries()   = " << s.num_entries() << "\n";
+    cout << "s.num_empty()     = " << s.num_empty() << "\n";
+    cout << "has_candidates(s) = " << boolalpha << has_candidates(s) << "\n\n";
+  }
   
   return  0;
 }

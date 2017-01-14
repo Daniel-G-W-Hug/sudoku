@@ -264,56 +264,6 @@ const list<int>& Sudoku::candidates(int i, int j) const {
   return cand[row_to_cnt(i,j)];
 }
 
-// void Sudoku::remove_candidate_from_list_of_cell(int cnt, int value) {
-//   dynamic_assert(is_valid_index(cnt),"Index out of range.");
-//   cand[cnt].remove(value);
-// }
-
-void Sudoku::update_candidate_list_of_cell(int cnt) {
-  dynamic_assert(is_valid_index(cnt),"Index out of range.");
-  //
-  // if the cell has an entry != 0 the candidate list must be cleared
-  //
-  // if the cell has an entry == 0 the candidate list must be updated:
-  //   each cell entry value != 0 that occurs in a row, col, or block
-  //   the cell belongs to has to be removed from the cell's candidate list
-  //
-  
-  if (f[cnt] != 0) {
-    if (cand[cnt].size() != 0) cand[cnt].clear();
-    return;
-  }
-
-  // from here on f[cnt] == 0, i.e. empty cells that should have candidate lists
-  
-  // remove all values ocurring in curr_row from candidate list
-  int curr_row=cnt_to_row(cnt).first;
-  for (int j=0;j < region_size;++j) {
-    int value = row(curr_row,j);
-    if (value > 0) cand[cnt].remove(value);
-  }
-
-  // remove all values ocurring in curr_col from candidate list
-  int curr_col=cnt_to_col(cnt).first;
-  for (int j=0;j < region_size;++j) {
-    int value = col(curr_col,j);
-    if (value > 0) cand[cnt].remove(value);
-  }
-  
-  // remove all values ocurring in curr_block from candidate list
-  int curr_block=cnt_to_block(cnt).first;
-  for (int j=0;j < region_size;++j) {
-    int value = block(curr_block,j);
-    if (value > 0) cand[cnt].remove(value);
-  }
-}
-
-void Sudoku::update_candidate_list_of_all_cells() {
-  for (int cnt=0;cnt < total_size; ++cnt) {
-    update_candidate_list_of_cell(cnt);
-  }
-}
-
 
 int Sudoku::row_to_cnt(int i, int j) const {
   // i... row index
@@ -450,7 +400,6 @@ bool Sudoku::is_valid() const {
 
   return true;
 }
-
 
 int Sudoku::num_entries() const {
 
