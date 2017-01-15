@@ -3,12 +3,12 @@
 
 #pragma once
 
-#include "sudoku_class.h"
-
 #include <iostream>
 #include <iomanip>          // setw()
 #include <string>
 #include <utility>          // pair<T,T>().first/.second
+
+#include "sudoku_class.h"
 
 using namespace std;
 
@@ -21,3 +21,13 @@ void sudoku_print(const Sudoku& s, const string msg);
 void sudoku_print_regions(const Sudoku& s, const string msg);
 void sudoku_print_cnt_to_x(const Sudoku& s, const string msg);
 void sudoku_print_candidates(const Sudoku& s, const string msg);
+
+//
+// for debugging
+//
+
+void print_vector_int(const vector<int>& v);
+void print_vector_list_int(const vector<list<int>>& v);
+
+void print_list_int(const list<int>& l);
+void print_list_list_int(const list<list<int>>& ll);

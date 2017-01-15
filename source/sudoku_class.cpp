@@ -155,10 +155,15 @@ Sudoku::Sudoku(int _region_size, int _blocks_per_row, int _blocks_per_col) :
   }
 
   // initialize and assign candidate lists for empty Sudoku
-  for (int cnt=0;cnt<total_size;++cnt) {
-    cand.push_back({1,2,3,4,5,6,7,8,9});
+  list<int> initial_list;
+  for (int i=1;i<=region_size;++i) {
+    initial_list.push_back(i);
   }
-
+  
+  for (int cnt=0;cnt<total_size;++cnt) {
+    cand.push_back(initial_list);
+  }
+  
   // initialize links for region access
   row.init_row_access();
   col.init_col_access();

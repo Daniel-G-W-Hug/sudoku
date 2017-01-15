@@ -6,18 +6,33 @@
 // routines to update sudoku candidate list
 //
 
-bool has_candidates(const Sudoku& s) {
 
-  if (s.num_empty() == 0) return false;
+int sudoku_num_candidates(const Sudoku& s) {
+
+  int no_of_candidates=0;
+  
+  if (s.num_empty() == 0) return no_of_candidates;
 
   // for all entries == 0 candidates available, if size of candidate list > 0
   for (int cnt=0; cnt < s.total_size; ++cnt) {
-    if (s(cnt) == 0 && s.candidates(cnt).size()==0 ) return false;
+    if (s(cnt) == 0 && s.candidates(cnt).size()==0 ) return no_of_candidates;
   }
-  return true;
+
+  // if arrived here, there are still candidates available
+  for (int cnt=0; cnt < s.total_size; ++cnt) {
+    if (s(cnt) == 0) no_of_candidates += s.candidates(cnt).size();
+  }
+  
+  return no_of_candidates;
 }
 
-bool has_singles(const Sudoku& s) {
+
+bool sudoku_has_candidates(const Sudoku& s) {
+  return sudoku_num_candidates(s) > 0;
+}
+
+
+int sudoku_num_singles(const Sudoku& s) {
 
   int no_of_singles=0;
 
@@ -27,8 +42,95 @@ bool has_singles(const Sudoku& s) {
     }
   }
   
-  return (no_of_singles > 0);
+  return no_of_singles;
 }
+
+bool sudoku_has_singles(const Sudoku& s) {
+  return sudoku_num_singles(s) > 0;
+}
+
+
+int sudoku_num_naked_twins(const Sudoku& s) {
+  //
+  // naked twin: Candidate lists of two cells in a region have the same two
+  //             entries. Since these two cells have those values,
+  //             The candidate values can be removed in all other candidate
+  //             lists of this region.
+  //
+
+  int no_of_naked_twins=0;
+  
+  // rows
+  for (int i=0;i < s.region_size; ++i) {
+
+    // row i
+    for (int j=0;j< s.region_size; ++j) {     
+      int cnt = s.row_to_cnt(i,j);
+      if (s(cnt) == 0 && s.candidates(cnt).size() == 2) {
+	// potential twin candidate found
+	for (int k=j+1;k < s.region_size; k++) {
+	  int cnt_k = s.row_to_cnt(i,k);
+	  if (s(cnt_k) == 0 && s.candidates(cnt_k).size() == 2 &&
+	      s.candidates(cnt) == s.candidates(cnt_k)) {
+	    // twin found
+	    ++no_of_naked_twins;
+	  }
+	}
+      }
+    }
+  }
+  // cout << "no. of naked twins (after rows): " << no_of_naked_twins << "\n\n";
+
+  // cols
+  for (int i=0;i < s.region_size; ++i) {
+
+    // col i
+    for (int j=0;j< s.region_size; ++j) {     
+      int cnt = s.col_to_cnt(i,j);
+      if (s(cnt) == 0 && s.candidates(cnt).size() == 2) {
+	// potential twin candidate found
+	for (int k=j+1;k < s.region_size; k++) {
+	  int cnt_k = s.col_to_cnt(i,k);
+	  if (s(cnt_k) == 0 && s.candidates(cnt_k).size() == 2 &&
+	      s.candidates(cnt) == s.candidates(cnt_k)) {
+	    // twin found
+	    ++no_of_naked_twins;
+	  }
+	}
+      }
+    }
+  }
+  // cout << "no. of naked twins (after cols): " << no_of_naked_twins << "\n\n";
+
+  // blocks
+  for (int i=0;i < s.region_size; ++i) {
+    
+    // block i
+    for (int j=0;j< s.region_size; ++j) {     
+      int cnt = s.block_to_cnt(i,j);
+      if (s(cnt) == 0 && s.candidates(cnt).size() == 2) {
+	// potential twin candidate found
+	for (int k=j+1;k < s.region_size; k++) {
+	  int cnt_k = s.block_to_cnt(i,k);
+	  if (s(cnt_k) == 0 && s.candidates(cnt_k).size() == 2 &&
+	      s.candidates(cnt) == s.candidates(cnt_k)) {
+	    // twin found
+	    ++no_of_naked_twins;
+	  }
+	}
+      }
+    }
+  }
+  // cout << "no. of naked twins (after blocks): " << no_of_naked_twins << "\n\n";
+  
+  return no_of_naked_twins;  
+}
+
+
+bool sudoku_has_naked_twins(const Sudoku& s) {
+  return sudoku_num_naked_twins(s) > 0;
+}
+
 
 void sudoku_update_candidates_cell(Sudoku& s, int cnt) {
   dynamic_assert(s.is_valid_index(cnt),"Index out of range.");
@@ -116,4 +218,156 @@ int sudoku_remove_singles(Sudoku& s) {  // return no. of removed singles
   }
   
   return no_removed;
+}
+
+
+
+int sudoku_remove_naked_twins(Sudoku& s) {
+  //
+  // naked twin: Candidate lists of two cells in a region have the same two
+  //             entries. Since these two cells have those values,
+  //             The candidate values can be removed in all other candidate
+  //             lists of this region.
+  //
+
+  int no_of_naked_twins_removed=0;
+
+  vector<list<int>> twin_values;
+  vector<list<int>> twin_pos;
+  
+  // rows
+  for (int i=0;i < s.region_size; ++i) {
+
+    twin_values.clear();
+    twin_pos.clear();
+    
+    // row i
+    for (int j=0;j < s.region_size; ++j) {     
+      int cnt = s.row_to_cnt(i,j);
+      if (s(cnt) == 0 && s.candidates(cnt).size() == 2) {
+	// potential twin candidate found
+	for (int k=j+1;k < s.region_size; ++k) {
+	  int cnt_k = s.row_to_cnt(i,k);
+	  if (s(cnt_k) == 0 && s.candidates(cnt_k).size() == 2 &&
+	      s.candidates(cnt) == s.candidates(cnt_k)) {
+	    // twin found
+	    twin_values.push_back(s.candidates(cnt));
+	    list<int> lh;
+	    lh.push_back(j);
+	    lh.push_back(k);
+	    twin_pos.push_back(lh);
+	  }
+	}
+      }
+    }
+
+    // remove twins from candidate list of other cells
+    for (size_t t_cnt=0;t_cnt < twin_values.size();++t_cnt) {
+	
+      for (int j=0; j < s.region_size; ++j) {
+	int cnt = s.row_to_cnt(i,j);
+	if (s(cnt) == 0 &&
+	    none_of(twin_pos[t_cnt].begin(),twin_pos[t_cnt].end(),
+		    [j](int i){return i==j;}) ) {
+	  // only remove if other cell in region
+	  remove_from_list_int(s.candidates(cnt),twin_values[t_cnt]);
+	}
+      }
+      
+      ++no_of_naked_twins_removed;
+    }
+    
+  } // for ... rows
+
+
+  // cols
+  for (int i=0;i < s.region_size; ++i) {
+
+    twin_values.clear();
+    twin_pos.clear();
+    
+    // col i
+    for (int j=0;j < s.region_size; ++j) {     
+      int cnt = s.col_to_cnt(i,j);
+      if (s(cnt) == 0 && s.candidates(cnt).size() == 2) {
+	// potential twin candidate found
+	for (int k=j+1;k < s.region_size; ++k) {
+	  int cnt_k = s.col_to_cnt(i,k);
+	  if (s(cnt_k) == 0 && s.candidates(cnt_k).size() == 2 &&
+	      s.candidates(cnt) == s.candidates(cnt_k)) {
+	    // twin found
+	    twin_values.push_back(s.candidates(cnt));
+	    list<int> lh;
+	    lh.push_back(j);
+	    lh.push_back(k);
+	    twin_pos.push_back(lh);
+	  }
+	}
+      }
+    }
+
+    // remove twins from candidate list of other cells
+    for (size_t t_cnt=0;t_cnt < twin_values.size();++t_cnt) {
+	
+      for (int j=0; j < s.region_size; ++j) {
+	int cnt = s.col_to_cnt(i,j);
+	if (s(cnt) == 0 &&
+	    none_of(twin_pos[t_cnt].begin(),twin_pos[t_cnt].end(),
+		    [j](int i){return i==j;}) ) {
+	  // only remove if other cell in region
+	  remove_from_list_int(s.candidates(cnt),twin_values[t_cnt]);
+	}
+      }
+      
+      ++no_of_naked_twins_removed;
+    }
+    
+  } // for ... cols
+
+
+  // blocks
+  for (int i=0;i < s.region_size; ++i) {
+
+    twin_values.clear();
+    twin_pos.clear();
+    
+    // block i
+    for (int j=0;j < s.region_size; ++j) {     
+      int cnt = s.block_to_cnt(i,j);
+      if (s(cnt) == 0 && s.candidates(cnt).size() == 2) {
+	// potential twin candidate found
+	for (int k=j+1;k < s.region_size; ++k) {
+	  int cnt_k = s.block_to_cnt(i,k);
+	  if (s(cnt_k) == 0 && s.candidates(cnt_k).size() == 2 &&
+	      s.candidates(cnt) == s.candidates(cnt_k)) {
+	    // twin found
+	    twin_values.push_back(s.candidates(cnt));
+	    list<int> lh;
+	    lh.push_back(j);
+	    lh.push_back(k);
+	    twin_pos.push_back(lh);
+	  }
+	}
+      }
+    }
+
+    // remove twins from candidate list of other cells
+    for (size_t t_cnt=0;t_cnt < twin_values.size();++t_cnt) {
+	
+      for (int j=0; j < s.region_size; ++j) {
+	int cnt = s.block_to_cnt(i,j);
+	if (s(cnt) == 0 &&
+	    none_of(twin_pos[t_cnt].begin(),twin_pos[t_cnt].end(),
+		    [j](int i){return i==j;}) ) {
+	  // only remove if other cell in region
+	  remove_from_list_int(s.candidates(cnt),twin_values[t_cnt]);
+	}
+      }
+      
+      ++no_of_naked_twins_removed;
+    }
+    
+  } // for ... blocks
+
+  return no_of_naked_twins_removed;  
 }

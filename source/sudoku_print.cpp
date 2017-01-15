@@ -6,11 +6,11 @@ void sudoku_print(const Sudoku& s, const string msg) {
 
   cout << msg << ":";
   for (int cnt=0;cnt < s.total_size; ++cnt) {
-    if (cnt >= 0 && cnt%s.region_size == 0 ) {
+    if (cnt%s.region_size == 0 ) {
       cout << "\n" << cnt/s.region_size << ": ";
     }
     cout << setw(2) << s(cnt);
-    if (cnt < s.total_size-1) cout << ", ";
+    if ((cnt+1)%s.region_size != 0) cout << ",";
   }
   cout << "\n";
 }
@@ -84,7 +84,18 @@ void sudoku_print_candidates(const Sudoku& s, const string msg) {
 
   cout << msg << ", candidates:\n";
   for (int cnt=0;cnt < s.total_size; ++cnt) {
-    cout << setw(2) << cnt << ": {";
+    cout << setw(2) << cnt << ": ";
+
+    cout << "r(" << s.cnt_to_row(cnt).first << ",";
+    cout << s.cnt_to_row(cnt).second << "), ";
+
+    cout << "c(" << s.cnt_to_col(cnt).first << ",";
+    cout << s.cnt_to_col(cnt).second << "), ";
+
+    cout << "b(" << s.cnt_to_block(cnt).first << ",";
+    cout << s.cnt_to_block(cnt).second << "): ";
+    
+    cout << "{";
     for (auto item=s.candidates(cnt).cbegin(),
 	           end_of_list=s.candidates(cnt).cend(),
 	           last=prev(end_of_list);
@@ -95,4 +106,60 @@ void sudoku_print_candidates(const Sudoku& s, const string msg) {
     cout << " }\n";
   }
   cout << "\n";
+}
+
+
+void print_vector_int(const vector<int>& v) {
+  cout << "[ ";
+  for (size_t i=0;i<v.size();++i) {
+    cout << v[i];
+    if (i < v.size()-1) cout << ", ";
+  }
+  cout << " ]\n";
+}
+
+
+void print_vector_list_int(const vector<list<int>>& v) {
+  cout << "[ ";
+  for (size_t i=0;i<v.size();++i) {
+
+    cout << "{";
+    for (auto p=v[i].begin();p!=v[i].end();++p) {
+      cout << *p;
+      if (p != prev(v[i].end())) cout << ", ";
+    }
+    cout << "}";
+
+    
+    if (i < v.size()-1) cout << ", ";
+  }
+  cout << " ]\n";
+}
+
+
+void print_list_int(const list<int>& l) {
+  cout << "{ ";
+  for (auto lp=l.begin();lp != l.end();++lp) {
+    cout << *lp;
+    if (lp != prev(l.end())) cout << ", ";
+  }
+  cout << " }\n";
+}
+
+
+void print_list_list_int(const list<list<int>>& ll) {
+  cout << "{ ";
+  for (auto llp=ll.begin();llp != ll.end();++llp) {
+
+    cout << "{";
+    for (auto p=(*llp).begin();p != (*llp).end();++p) {
+      cout << *p;
+      if (p != prev((*llp).end())) cout << ", ";
+    }
+    cout << "}";
+
+    
+    if (llp != prev(ll.end())) cout << ", ";
+  }
+  cout << " }\n";
 }
