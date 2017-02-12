@@ -302,6 +302,36 @@ int Sudoku::block_to_cnt(int i, int j) const {
   return cnt;
 }
 
+int Sudoku::region_to_cnt(int region, int i, int j) const {
+  // region ... 0: row, 1: col, 2: block
+  // i... region index
+  // j... index within region
+
+  dynamic_assert( ((region >= 0) && (region <=2)) ,"Region index out of range.");
+  dynamic_assert(is_valid_region_index(i,j),"Index out of range.");
+
+  int tmp;
+  
+  switch (region) {
+  
+  case 0:
+    tmp = row_to_cnt(i,j);
+    break;
+
+  case 1:
+    tmp = col_to_cnt(i,j);
+    break;
+
+  case 2:
+    tmp = block_to_cnt(i,j);
+    break;
+
+  default:
+    cout << "Should never reach here!\n";
+}
+  
+  return tmp;
+}
 
 pair<int,int> Sudoku::cnt_to_row(int cnt) const {
   // first = row index = cnt/region_size
@@ -344,6 +374,35 @@ pair<int,int> Sudoku::cnt_to_block(int cnt) const {
   int idx_in_block = col%cols_per_block + (row%rows_per_block)*cols_per_block;
     
   return make_pair(block_idx,idx_in_block);
+}
+
+pair<int,int> Sudoku::cnt_to_region(int region, int cnt) const {
+  // region ... 0: row, 1: col, 2: block
+
+  dynamic_assert( ((region >= 0) && (region <=2)) ,"Region index out of range.");
+  dynamic_assert(is_valid_index(cnt),"Index out of range.");
+
+  pair<int,int> tmp;
+
+  switch (region) {
+    
+  case 0:
+    tmp = cnt_to_row(cnt);
+    break;
+    
+  case 1:
+    tmp = cnt_to_col(cnt);
+    break;
+    
+  case 2:
+    tmp = cnt_to_block(cnt);
+    break;
+
+  default:
+    cout << "Should never reach here!\n";
+  }
+
+  return tmp;
 }
 
 

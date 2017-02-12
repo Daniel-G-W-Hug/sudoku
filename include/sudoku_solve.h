@@ -22,6 +22,7 @@ bool sudoku_has_candidates(const Sudoku& s);
 int  sudoku_num_singles(const Sudoku& s);
 bool sudoku_has_singles(const Sudoku& s);
 
+int  sudoku_num_naked_twins_in_region(const Sudoku& s, int region); 
 int  sudoku_num_naked_twins(const Sudoku& s);
 bool sudoku_has_naked_twins(const Sudoku& s);
 
@@ -36,4 +37,5 @@ int sudoku_remove_singles(Sudoku& s);
 
 // solution steps (return no. of removed naked twins)
 // just reduces candidate lists of cells in region, does not fill in cells
+int sudoku_remove_naked_twins_in_region(Sudoku& s, int region);
 int sudoku_remove_naked_twins(Sudoku& s);

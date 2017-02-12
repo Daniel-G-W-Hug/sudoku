@@ -49,8 +49,7 @@ bool sudoku_has_singles(const Sudoku& s) {
   return sudoku_num_singles(s) > 0;
 }
 
-
-int sudoku_num_naked_twins(const Sudoku& s) {
+int sudoku_num_naked_twins_in_region(const Sudoku& s, int region) {
   //
   // naked twin: Candidate lists of two cells in a region have the same two
   //             entries. Since these two cells have those values,
@@ -58,70 +57,40 @@ int sudoku_num_naked_twins(const Sudoku& s) {
   //             lists of this region.
   //
 
-  int no_of_naked_twins=0;
+  int no_of_identified_naked_twins=0;
   
-  // rows
   for (int i=0;i < s.region_size; ++i) {
 
-    // row i
     for (int j=0;j< s.region_size; ++j) {     
-      int cnt = s.row_to_cnt(i,j);
+      int cnt = s.region_to_cnt(region, i,j);
       if (s(cnt) == 0 && s.candidates(cnt).size() == 2) {
 	// potential twin candidate found
 	for (int k=j+1;k < s.region_size; k++) {
-	  int cnt_k = s.row_to_cnt(i,k);
+	  int cnt_k = s.region_to_cnt(region, i,k);
 	  if (s(cnt_k) == 0 && s.candidates(cnt_k).size() == 2 &&
 	      s.candidates(cnt) == s.candidates(cnt_k)) {
 	    // twin found
-	    ++no_of_naked_twins;
+	    ++no_of_identified_naked_twins;
 	  }
 	}
       }
     }
   }
-  // cout << "no. of naked twins (after rows): " << no_of_naked_twins << "\n\n";
+  return no_of_identified_naked_twins;
+}
 
-  // cols
-  for (int i=0;i < s.region_size; ++i) {
+int sudoku_num_naked_twins(const Sudoku& s) {
 
-    // col i
-    for (int j=0;j< s.region_size; ++j) {     
-      int cnt = s.col_to_cnt(i,j);
-      if (s(cnt) == 0 && s.candidates(cnt).size() == 2) {
-	// potential twin candidate found
-	for (int k=j+1;k < s.region_size; k++) {
-	  int cnt_k = s.col_to_cnt(i,k);
-	  if (s(cnt_k) == 0 && s.candidates(cnt_k).size() == 2 &&
-	      s.candidates(cnt) == s.candidates(cnt_k)) {
-	    // twin found
-	    ++no_of_naked_twins;
-	  }
-	}
-      }
-    }
-  }
-  // cout << "no. of naked twins (after cols): " << no_of_naked_twins << "\n\n";
+  int no_of_naked_twins=0;
 
-  // blocks
-  for (int i=0;i < s.region_size; ++i) {
-    
-    // block i
-    for (int j=0;j< s.region_size; ++j) {     
-      int cnt = s.block_to_cnt(i,j);
-      if (s(cnt) == 0 && s.candidates(cnt).size() == 2) {
-	// potential twin candidate found
-	for (int k=j+1;k < s.region_size; k++) {
-	  int cnt_k = s.block_to_cnt(i,k);
-	  if (s(cnt_k) == 0 && s.candidates(cnt_k).size() == 2 &&
-	      s.candidates(cnt) == s.candidates(cnt_k)) {
-	    // twin found
-	    ++no_of_naked_twins;
-	  }
-	}
-      }
-    }
-  }
-  // cout << "no. of naked twins (after blocks): " << no_of_naked_twins << "\n\n";
+  no_of_naked_twins += sudoku_num_naked_twins_in_region(s, 0);
+  //cout << "no. of naked twins (after rows): " << no_of_naked_twins << "\n";
+
+  no_of_naked_twins += sudoku_num_naked_twins_in_region(s, 1);
+  //cout << "no. of naked twins (after cols): " << no_of_naked_twins << "\n";
+
+  no_of_naked_twins += sudoku_num_naked_twins_in_region(s, 2);
+  //cout << "no. of naked twins (after blocks): " << no_of_naked_twins << "\n";
   
   return no_of_naked_twins;  
 }
@@ -221,33 +190,30 @@ int sudoku_remove_singles(Sudoku& s) {  // return no. of removed singles
 }
 
 
-
-int sudoku_remove_naked_twins(Sudoku& s) {
+int sudoku_remove_naked_twins_in_region(Sudoku& s, int region) {
   //
   // naked twin: Candidate lists of two cells in a region have the same two
   //             entries. Since these two cells have those values,
   //             The candidate values can be removed in all other candidate
   //             lists of this region.
   //
-
-  int no_of_naked_twins_removed=0;
+  
+  int no_of_naked_twins_removed_in_region=0;
 
   vector<list<int>> twin_values;
   vector<list<int>> twin_pos;
   
-  // rows
   for (int i=0;i < s.region_size; ++i) {
 
     twin_values.clear();
     twin_pos.clear();
     
-    // row i
     for (int j=0;j < s.region_size; ++j) {     
-      int cnt = s.row_to_cnt(i,j);
+      int cnt = s.region_to_cnt(region, i,j);
       if (s(cnt) == 0 && s.candidates(cnt).size() == 2) {
 	// potential twin candidate found
 	for (int k=j+1;k < s.region_size; ++k) {
-	  int cnt_k = s.row_to_cnt(i,k);
+	  int cnt_k = s.region_to_cnt(region, i,k);
 	  if (s(cnt_k) == 0 && s.candidates(cnt_k).size() == 2 &&
 	      s.candidates(cnt) == s.candidates(cnt_k)) {
 	    // twin found
@@ -265,7 +231,7 @@ int sudoku_remove_naked_twins(Sudoku& s) {
     for (size_t t_cnt=0;t_cnt < twin_values.size();++t_cnt) {
 	
       for (int j=0; j < s.region_size; ++j) {
-	int cnt = s.row_to_cnt(i,j);
+	int cnt = s.region_to_cnt(region, i,j);
 	if (s(cnt) == 0 &&
 	    none_of(twin_pos[t_cnt].begin(),twin_pos[t_cnt].end(),
 		    [j](int i){return i==j;}) ) {
@@ -274,100 +240,31 @@ int sudoku_remove_naked_twins(Sudoku& s) {
 	}
       }
       
-      ++no_of_naked_twins_removed;
+      ++no_of_naked_twins_removed_in_region;
     }
     
-  } // for ... rows
+  }
+  
+  return no_of_naked_twins_removed_in_region;
+}
 
 
-  // cols
-  for (int i=0;i < s.region_size; ++i) {
-
-    twin_values.clear();
-    twin_pos.clear();
-    
-    // col i
-    for (int j=0;j < s.region_size; ++j) {     
-      int cnt = s.col_to_cnt(i,j);
-      if (s(cnt) == 0 && s.candidates(cnt).size() == 2) {
-	// potential twin candidate found
-	for (int k=j+1;k < s.region_size; ++k) {
-	  int cnt_k = s.col_to_cnt(i,k);
-	  if (s(cnt_k) == 0 && s.candidates(cnt_k).size() == 2 &&
-	      s.candidates(cnt) == s.candidates(cnt_k)) {
-	    // twin found
-	    twin_values.push_back(s.candidates(cnt));
-	    list<int> lh;
-	    lh.push_back(j);
-	    lh.push_back(k);
-	    twin_pos.push_back(lh);
-	  }
-	}
-      }
-    }
-
-    // remove twins from candidate list of other cells
-    for (size_t t_cnt=0;t_cnt < twin_values.size();++t_cnt) {
-	
-      for (int j=0; j < s.region_size; ++j) {
-	int cnt = s.col_to_cnt(i,j);
-	if (s(cnt) == 0 &&
-	    none_of(twin_pos[t_cnt].begin(),twin_pos[t_cnt].end(),
-		    [j](int i){return i==j;}) ) {
-	  // only remove if other cell in region
-	  remove_from_list_int(s.candidates(cnt),twin_values[t_cnt]);
-	}
-      }
-      
-      ++no_of_naked_twins_removed;
-    }
-    
-  } // for ... cols
+int sudoku_remove_naked_twins(Sudoku& s) {
 
 
-  // blocks
-  for (int i=0;i < s.region_size; ++i) {
+  int no_of_naked_twins_removed=0;
 
-    twin_values.clear();
-    twin_pos.clear();
-    
-    // block i
-    for (int j=0;j < s.region_size; ++j) {     
-      int cnt = s.block_to_cnt(i,j);
-      if (s(cnt) == 0 && s.candidates(cnt).size() == 2) {
-	// potential twin candidate found
-	for (int k=j+1;k < s.region_size; ++k) {
-	  int cnt_k = s.block_to_cnt(i,k);
-	  if (s(cnt_k) == 0 && s.candidates(cnt_k).size() == 2 &&
-	      s.candidates(cnt) == s.candidates(cnt_k)) {
-	    // twin found
-	    twin_values.push_back(s.candidates(cnt));
-	    list<int> lh;
-	    lh.push_back(j);
-	    lh.push_back(k);
-	    twin_pos.push_back(lh);
-	  }
-	}
-      }
-    }
+  no_of_naked_twins_removed += sudoku_remove_naked_twins_in_region(s, 0);
+  // cout << "no. of naked twins removed (after rows): ";
+  // cout << no_of_naked_twins_removed << "\n";
 
-    // remove twins from candidate list of other cells
-    for (size_t t_cnt=0;t_cnt < twin_values.size();++t_cnt) {
-	
-      for (int j=0; j < s.region_size; ++j) {
-	int cnt = s.block_to_cnt(i,j);
-	if (s(cnt) == 0 &&
-	    none_of(twin_pos[t_cnt].begin(),twin_pos[t_cnt].end(),
-		    [j](int i){return i==j;}) ) {
-	  // only remove if other cell in region
-	  remove_from_list_int(s.candidates(cnt),twin_values[t_cnt]);
-	}
-      }
-      
-      ++no_of_naked_twins_removed;
-    }
-    
-  } // for ... blocks
+  no_of_naked_twins_removed += sudoku_remove_naked_twins_in_region(s, 1);
+  // cout << "no. of naked twins removed (after cols): ";
+  // cout << no_of_naked_twins_removed << "\n";
+
+  no_of_naked_twins_removed += sudoku_remove_naked_twins_in_region(s, 2);
+  // cout << "no. of naked twins removed (after blocks): ";
+  // cout << no_of_naked_twins_removed << "\n";
 
   return no_of_naked_twins_removed;  
 }

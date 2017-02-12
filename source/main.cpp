@@ -56,30 +56,43 @@ int main(int argc, char* argv[]) {
   sudoku_print(s,"s"); cout << "\n\n";
   // sudoku_print_regions(s,"s_regions"); cout << "\n\n";
   // sudoku_print_cnt_to_x(s,"cnt_to_x"); cout << "\n\n";
-  sudoku_print_candidates(s,"s"); cout << "\n\n";  
+  // sudoku_print_candidates(s,"s"); cout << "\n\n";  
 
   sudoku_print_status(s,"s");
     
 
   int run_count=0;
-  int remove_count=0;
-  
   while (sudoku_has_singles(s)) {
     ++run_count;
-    cout << "run no. " << run_count << "\n";
+    cout << "remove naked singles - run no. " << run_count << "\n";
     
-    remove_count += sudoku_remove_singles(s);
-  }  
-  cout << "no. of removed singles: " << remove_count << "\n\n";
+    int removed_singles_count = sudoku_remove_singles(s);
+    cout << "no. of removed singles: " << removed_singles_count << "\n\n";
+  }
+
   
   sudoku_print(s,"s"); cout << "\n\n";
   // sudoku_print_candidates(s,"s"); cout << "\n\n";
   sudoku_print_status(s,"s");
 
 
-  if (sudoku_has_naked_twins(s)) {
-    int removed_naked_twins = sudoku_remove_naked_twins(s);
-    cout << "removed_naked_twins(s) = " << removed_naked_twins << "\n\n";
+  run_count = 0;
+  bool candidates_removed = true;
+  
+  while (sudoku_has_naked_twins(s) && candidates_removed) {
+    ++run_count;
+    cout << "remove naked twins - run no. " << run_count << "\n";
+    
+    int num_candidates_before = sudoku_num_candidates(s);
+    int removed_naked_count = sudoku_remove_naked_twins(s);
+    int num_candidates_after = sudoku_num_candidates(s);
+
+    if (num_candidates_before - num_candidates_after != 0) {
+      cout << "removed_naked_twins(s) = " << removed_naked_count << "\n\n";
+    } else {
+      candidates_removed = false;
+      cout << "no naked twins removed\n\n";
+    }
   }
 
   sudoku_print(s,"s"); cout << "\n\n";
@@ -88,28 +101,41 @@ int main(int argc, char* argv[]) {
 
   
   run_count=0;
-  remove_count=0;
-  
   while (sudoku_has_singles(s)) {
     ++run_count;
-    cout << "run no. " << run_count << "\n";
+    cout << "remove naked singles - run no. " << run_count << "\n";
     
-    remove_count += sudoku_remove_singles(s);
-  }  
-  cout << "no. of removed singles: " << remove_count << "\n\n";
+    int removed_singles_count = sudoku_remove_singles(s);
+    cout << "no. of removed singles: " << removed_singles_count << "\n\n";
+  }
+
   
   sudoku_print(s,"s"); cout << "\n\n";
   // sudoku_print_candidates(s,"s"); cout << "\n\n";
   sudoku_print_status(s,"s");
 
   
-  if (sudoku_has_naked_twins(s)) {
+  run_count = 0;
+  candidates_removed = true;
+  
+  while (sudoku_has_naked_twins(s) && candidates_removed) {
+    ++run_count;
+    cout << "remove naked twins - run no. " << run_count << "\n";
+    
+    int num_candidates_before = sudoku_num_candidates(s);
     int removed_naked_twins = sudoku_remove_naked_twins(s);
-    cout << "removed_naked_twins(s) = " << removed_naked_twins << "\n\n";
+    int num_candidates_after = sudoku_num_candidates(s);
+
+    if (num_candidates_before - num_candidates_after != 0) {
+      cout << "removed_naked_twins(s) = " << removed_naked_twins << "\n\n";
+    } else {
+      candidates_removed = false;
+      cout << "no naked twins removed\n\n";
+    }
   }
 
   sudoku_print(s,"s"); cout << "\n\n";
-  sudoku_print_candidates(s,"s"); cout << "\n\n";
+  // sudoku_print_candidates(s,"s"); cout << "\n\n";
   sudoku_print_status(s,"s");
 
   

@@ -111,9 +111,12 @@ public:
   int row_to_cnt(int i,int j) const;
   int col_to_cnt(int i,int j) const;
   int block_to_cnt(int i, int j) const;
+  int region_to_cnt(int region, int i,int j) const; // region ... 0: row, 1: col, 2: block
+  
   pair<int,int> cnt_to_row(int cnt) const;
   pair<int,int> cnt_to_col(int cnt) const;
   pair<int,int> cnt_to_block(int cnt) const;
+  pair<int,int> cnt_to_region(int region, int cnt) const; // region ... 0: row, 1: col, 2: block
 
   // helpers for checking index values
   bool is_valid_index(int cnt) const;
