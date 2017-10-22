@@ -10,7 +10,15 @@
 #include <utility>          // pair<T,T>(), make_pair()
 #include "dyn_assert.h"     // dynamic_assert()
 
-using namespace std;
+
+struct Sudoku_cell {
+  int val {0};             // entry value 0: empty indicator; 1..N for set value
+  int r;                   // row index the cell belongs to
+  int c;                   // col index the cell belongs to
+  int b;                   // block index the cell belongs to
+  std::list<int> cand {};  // list of remaining candidates for this cell (=permissible entries)
+  std::list<int> rqrd {};  // list of required entries for this cell
+};
 
 //
 // interface class Sudoku
@@ -18,62 +26,39 @@ using namespace std;
 // Sudoku keeps track of data structure to represent a sudoku of arbitrary size
 //
 
-class Sudoku;  // forward declaration for access classes
+class Sudoku;  // forward declaration for access class
 
+enum class Region {row, col, block}; // enum of region types
 
 // access classes of Sudoku for various access schemes (row, col, block)
-class Row_access {
-  Sudoku& ref;
-  vector<vector<int*>> r;  // vector of row vectors
-public:
-  Row_access(Sudoku& _ref);
-  void init_row_access();  // to be called AFTER Sudoku entries are set up
-  // access to row(cnt)
-  vector<int*>& operator()(int cnt);
-  const vector<int*>& operator()(int cnt) const;
-  // element access at row(i,j)
-  int& operator()(int i, int j);
-  const int& operator()(int i, int j) const;
-};
+class Access {
+  
+  Sudoku& m_s;                                 // reference to Sudoku instance
+  std::vector<std::vector<Sudoku_cell*>> m_rv; // region vectors (row/col/block)
+  const Region m_region;                       // region type for this instance
 
-class Col_access {
-  Sudoku& ref;
-  vector<vector<int*>> c;
 public:
-  Col_access(Sudoku& _ref);
-  void init_col_access();  // to be called AFTER Sudoku entries are set up
-  // access to col(cnt)
-  vector<int*>& operator()(int cnt);
-  const vector<int*>& operator()(int cnt) const;
-  // element access at col(i,j)
-  int& operator()(int i, int j);
-  const int& operator()(int i, int j) const;
-};
-
-class Block_access {
-  Sudoku& ref;
-  vector<vector<int*>> b;
-public:
-  Block_access(Sudoku& _ref);
-  void init_block_access();  // to be called AFTER Sudoku entries are set up
-  // access to block(cnt)
-  vector<int*>& operator()(int cnt);
-  const vector<int*>& operator()(int cnt) const;
-  // element access at block(i,j)
-  int& operator()(int i, int j);
-  const int& operator()(int i, int j) const;
+  Access(Sudoku& t_ref, const Region t_region);
+  
+  // to be called AFTER Sudoku entries are set up in Sudoku constructor
+  // in order to set up access references depending on region type
+  void init_access();
+  
+  // access to region(cnt)
+  vector<Sudoku_cell*>& operator()(int cnt);
+  const vector<Sudoku_cell*>& operator()(int cnt) const;
+  // element access at region(i,j)
+  Sudoku_cell& operator()(int i, int j);
+  const Sudoku_cell& operator()(int i, int j) const;
 };
 
 
 class Sudoku {
 
   // access to regions
-  friend class Row_access;
-  friend class Col_access;
-  friend class Block_access;
+  friend class Access;
 
-  vector<int> f;            // contains Sudoku entries
-  vector<list<int>> cand;   // contains list of candidates for each cell
+  std::vector<Sudoku_cell> m_cell;            // contains Sudoku entries
 
 public:
   
@@ -83,49 +68,40 @@ public:
   const int total_size;     // total size of sudoku = region_size*region_size
 
   // constructors
-  Sudoku(int _region_size, int _blocks_per_row, int _blocks_per_col);
+  Sudoku(int t_region_size, int t_blocks_per_row, int t_blocks_per_col);
   Sudoku(const Sudoku& other_Sudoku); 
 
   // assignment
   Sudoku& operator=(const Sudoku&);
 
   // element access
-  int& operator()(int cnt);
-  const int& operator()(int cnt) const;
-  int& operator()(int i, int j);
-  const int& operator()(int i, int j) const;
+  Sudoku_cell& operator()(int cnt);
+  const Sudoku_cell& operator()(int cnt) const;
+  Sudoku_cell& operator()(int i, int j);
+  const Sudoku_cell& operator()(int i, int j) const;
   
   // provide cell access in various forms for regions
   // (all addressing the same memory)
-  Row_access   row;
-  Col_access   col;
-  Block_access block;
+  Access   row;
+  Access   col;
+  Access block;
 
-  // access to candidate lists
-  list<int>& candidates(int cnt);
-  const list<int>& candidates(int cnt) const;
-
-  list<int>& candidates(int i, int j);
-  const list<int>& candidates(int i, int j) const;
-  
+  // access by index (this is where the mapping happens)
   int row_to_cnt(int i,int j) const;
   int col_to_cnt(int i,int j) const;
   int block_to_cnt(int i, int j) const;
-  int region_to_cnt(int region, int i,int j) const; // region ... 0: row, 1: col, 2: block
+  int region_to_cnt(const Region region, int i,int j) const;
   
-  pair<int,int> cnt_to_row(int cnt) const;
-  pair<int,int> cnt_to_col(int cnt) const;
-  pair<int,int> cnt_to_block(int cnt) const;
-  pair<int,int> cnt_to_region(int region, int cnt) const; // region ... 0: row, 1: col, 2: block
+  std::pair<int,int> cnt_to_row(int cnt) const;
+  std::pair<int,int> cnt_to_col(int cnt) const;
+  std::pair<int,int> cnt_to_block(int cnt) const;
+  std::pair<int,int> cnt_to_region(const Region region, int cnt) const;
+
+  bool cell_is_in_affected_regions(int curr_block, int cnt);
 
   // helpers for checking index values
   bool is_valid_index(int cnt) const;
   bool is_valid_region_index(int cnt) const;
   bool is_valid_region_index(int i, int j) const;
-
-  // validation of sudoku
-  bool is_valid() const;       // valid and unique entries in each region
-  int num_entries() const;     // return no. of entries != 0 (non empty entries)
-  int num_empty() const;       // return no. of entries == 0 (empty entries)
 
 };

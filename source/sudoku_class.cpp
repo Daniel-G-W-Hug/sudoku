@@ -1,130 +1,73 @@
 //345678901234567890123456789012345678901234567890123456789012345678901234567890
 
 #include "sudoku_class.h"
+#include "sudoku_print.h"    // only for debugging
+
+#include <algorithm>
+
+using namespace std;
 
 // access classes of Sudoku for various access schemes (row, col, block)
   
-Row_access::Row_access(Sudoku& _ref) : ref(_ref) {}
+Access::Access(Sudoku& t_s, const Region t_region) : m_s(t_s),
+						     m_region(t_region) {}
 
-void Row_access::init_row_access() {
-  for (int i=0;i<ref.region_size;++i) {
-    vector<int*> rh;
-    for (int j=0;j<ref.region_size;++j) {
-      // set links within row
-      rh.push_back(&ref.f[ref.row_to_cnt(i,j)]);
+void Access::init_access() {
+
+  // initialize references for access in regions (row / col / block)
+  for (int i=0;i<m_s.region_size;++i) {
+    vector<Sudoku_cell*> rh;
+    for (int j=0;j<m_s.region_size;++j) {
+
+      switch (m_region) {
+
+      case Region::row:
+	// set links within row
+	rh.push_back(&m_s.m_cell[m_s.row_to_cnt(i,j)]);
+        break;
+	
+      case Region::col:
+	// set links within row
+	rh.push_back(&m_s.m_cell[m_s.col_to_cnt(i,j)]);
+        break;
+	
+      case Region::block:
+	// set links within row
+	rh.push_back(&m_s.m_cell[m_s.block_to_cnt(i,j)]);
+        break;
+
+      }
+      
     }
-    // add row vector
-    r.push_back(rh);
+    // add region vector
+    m_rv.push_back(rh);
   }
 }
 
-vector<int*>& Row_access::operator()(int cnt) {
-  // i... row index
-  dynamic_assert(ref.is_valid_region_index(cnt),"Index out of range.");
-  return r[cnt];
+vector<Sudoku_cell*>& Access::operator()(int cnt) {
+  dynamic_assert(m_s.is_valid_region_index(cnt),"Index out of range.");
+  return m_rv[cnt];
 }
     
-const vector<int*>& Row_access::operator()(int cnt) const {
-  // i... row index
-  dynamic_assert(ref.is_valid_region_index(cnt),"Index out of range.");
-  return r[cnt];
+const vector<Sudoku_cell*>& Access::operator()(int cnt) const {
+  dynamic_assert(m_s.is_valid_region_index(cnt),"Index out of range.");
+  return m_rv[cnt];
 }
 
-int& Row_access::operator()(int i, int j) {
-  // i... row index
-  // j... index within row
-  dynamic_assert(ref.is_valid_region_index(i,j),"Index out of range.");
-  return *r[i][j];
+Sudoku_cell& Access::operator()(int i, int j) {
+  // i... region index
+  // j... index within region
+  dynamic_assert(m_s.is_valid_region_index(i,j),"Index out of range.");
+  return *m_rv[i][j];
 }
     
-const int& Row_access::operator()(int i, int j) const {
-  // i... row index
-  // j... index within row
-  dynamic_assert(ref.is_valid_region_index(i,j),"Index out of range.");
-  return *r[i][j];
+const Sudoku_cell& Access::operator()(int i, int j) const {
+  // i... region index
+  // j... index within region
+  dynamic_assert(m_s.is_valid_region_index(i,j),"Index out of range.");
+  return *m_rv[i][j];
 }
 
-
-Col_access::Col_access(Sudoku& _ref) : ref(_ref) {}
-
-void Col_access::init_col_access() {
-  for (int i=0;i<ref.region_size;++i) {
-    vector<int*> ch;
-    for (int j=0;j<ref.region_size;++j) {
-      // set links within col
-      ch.push_back(&ref.f[ref.col_to_cnt(i,j)]);
-    }
-    // add col vector
-    c.push_back(ch);
-  }
-}
-
-vector<int*>& Col_access::operator()(int cnt) {
-  // i... col index
-  dynamic_assert(ref.is_valid_region_index(cnt),"Index out of range.");
-  return c[cnt];
-}
-    
-const vector<int*>& Col_access::operator()(int cnt) const {
-  // i... col index
-  dynamic_assert(ref.is_valid_region_index(cnt),"Index out of range.");
-  return c[cnt];
-}
-
-int& Col_access::operator()(int i, int j) {
-  // i... col index
-  // j... index within col
-  dynamic_assert(ref.is_valid_region_index(i,j),"Index out of range.");
-  return *c[i][j];
-}
-    
-const int& Col_access::operator()(int i, int j) const {
-  // i... col index
-  // j... index within col
-  dynamic_assert(ref.is_valid_region_index(i,j),"Index out of range.");
-  return *c[i][j];
-}
-
-
-Block_access::Block_access(Sudoku& _ref) : ref(_ref) {}
-
-void Block_access::init_block_access() {
-  for (int i=0;i<ref.region_size;++i) {
-    vector<int*> bh;
-    for (int j=0;j<ref.region_size;++j) {
-      // set links within block
-      bh.push_back(&ref.f[ref.block_to_cnt(i,j)]);
-    }
-    // add block vector
-    b.push_back(bh);
-  }
-}
-
-vector<int*>& Block_access::operator()(int cnt) {
-  // i... block index
-  dynamic_assert(ref.is_valid_region_index(cnt),"Index out of range.");
-  return b[cnt];
-}
-    
-const vector<int*>& Block_access::operator()(int cnt) const {
-  // i... block index
-  dynamic_assert(ref.is_valid_region_index(cnt),"Index out of range.");
-  return b[cnt];
-}
-
-int& Block_access::operator()(int i, int j) {
-  // i... block index
-  // j... index within block
-  dynamic_assert(ref.is_valid_region_index(i,j),"Index out of range.");
-  return *b[i][j];
-}
-    
-const int& Block_access::operator()(int i, int j) const {
-  // i... block index
-  // j... index within block
-  dynamic_assert(ref.is_valid_region_index(i,j),"Index out of range.");
-  return *b[i][j];
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -132,14 +75,14 @@ const int& Block_access::operator()(int i, int j) const {
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-Sudoku::Sudoku(int _region_size, int _blocks_per_row, int _blocks_per_col) :
-  region_size(_region_size),
-  blocks_per_row(_blocks_per_row),
-  blocks_per_col(_blocks_per_col),
-  total_size(_region_size*_region_size),
-  row(*this),
-  col(*this),
-  block(*this) {
+Sudoku::Sudoku(int t_region_size, int t_blocks_per_row, int t_blocks_per_col) :
+  region_size(t_region_size),
+  blocks_per_row(t_blocks_per_row),
+  blocks_per_col(t_blocks_per_col),
+  total_size(t_region_size*t_region_size),
+  row(*this,   Region::row),
+  col(*this,   Region::col),
+  block(*this, Region::block) {
 
   // cout << "regular constructor called.\n";
 
@@ -149,25 +92,25 @@ Sudoku::Sudoku(int _region_size, int _blocks_per_row, int _blocks_per_col) :
 		 region_size%blocks_per_row ==0,
 		 "Invalid Sudoku parameters.");
   
-  // initialize member array as empty Sudoku
-  for (int cnt=0;cnt<total_size;++cnt) {
-    f.push_back(0);
+  // initialize empty Sudoku incl. region assignment and candidate list for each cell
+  Sudoku_cell sc;
+  
+  for (int i=1;i<=region_size;++i) {
+    sc.cand.push_back(i);  // all candidates possible
   }
 
-  // initialize and assign candidate lists for empty Sudoku
-  list<int> initial_list;
-  for (int i=1;i<=region_size;++i) {
-    initial_list.push_back(i);
-  }
-  
+  // let the current cell know which regions it belongs to
   for (int cnt=0;cnt<total_size;++cnt) {
-    cand.push_back(initial_list);
+    sc.r=cnt_to_row(cnt).first;
+    sc.c=cnt_to_col(cnt).first;
+    sc.b=cnt_to_block(cnt).first;
+    m_cell.push_back(sc);
   }
-  
+
   // initialize links for region access
-  row.init_row_access();
-  col.init_col_access();
-  block.init_block_access();
+  row.init_access();
+  col.init_access();
+  block.init_access();
 }
 
 //
@@ -178,30 +121,26 @@ Sudoku::Sudoku(const Sudoku& other_Sudoku) :
   blocks_per_row(other_Sudoku.blocks_per_row),
   blocks_per_col(other_Sudoku.blocks_per_col),
   total_size(other_Sudoku.region_size*other_Sudoku.region_size),
-  row(*this),
-  col(*this),
-  block(*this) {
+  row(*this,   Region::row),
+  col(*this,   Region::col),
+  block(*this, Region::block) {
 
   // cout << "copy constructor called.\n";
   
   // copy member array
   for (int cnt=0;cnt<total_size;++cnt) {
-    f.push_back(other_Sudoku.f[cnt]);
-  }
-
-  // initialize and assign candidate lists
-  cand.reserve(total_size);
-  for (int cnt=0;cnt<total_size;++cnt) {
-    cand.push_back(other_Sudoku.cand[cnt]);
+    m_cell.push_back(other_Sudoku.m_cell[cnt]);
   }
 
   // initialize links for region access
-  row.init_row_access();
-  col.init_col_access();
-  block.init_block_access();
+  row.init_access();
+  col.init_access();
+  block.init_access();
 }
 
+//
 // assignment
+//
 Sudoku& Sudoku::operator=(const Sudoku& other_Sudoku) {
 
   // cout << "assignment operator called\n";
@@ -216,57 +155,36 @@ Sudoku& Sudoku::operator=(const Sudoku& other_Sudoku) {
 		    "Invalid assignment. Layout of source and destination must be identical.");
       
     for (int cnt=0;cnt<total_size;++cnt) {
-      f[cnt]=other_Sudoku.f[cnt];
-      cand[cnt]=other_Sudoku.cand[cnt];
+      m_cell[cnt]=other_Sudoku.m_cell[cnt];
     }
     
     // initialize links for region access
-    row.init_row_access();
-    col.init_col_access();
-    block.init_block_access();
+    row.init_access();
+    col.init_access();
+    block.init_access();
   }
   return *this;
 }
 
 
-int& Sudoku::operator()(int cnt) {
+Sudoku_cell& Sudoku::operator()(int cnt) {
   dynamic_assert(is_valid_index(cnt),"Index out of range.");
-  return f[cnt];
+  return m_cell[cnt];
 }
 
-const int& Sudoku::operator()(int cnt) const {
+const Sudoku_cell& Sudoku::operator()(int cnt) const {
   dynamic_assert(is_valid_index(cnt),"Index out of range.");
-  return f[cnt];
+  return m_cell[cnt];
 }
 
-int& Sudoku::operator()(int i, int j) {
+Sudoku_cell& Sudoku::operator()(int i, int j) {
   dynamic_assert(is_valid_region_index(i,j),"Index out of range.");
-  return f[row_to_cnt(i,j)];   // use row conversion for 2D array mem_order
+  return m_cell[row_to_cnt(i,j)];   // use row conversion for 2D array mem_order
 }
 
-const int& Sudoku::operator()(int i, int j) const {
+const Sudoku_cell& Sudoku::operator()(int i, int j) const {
   dynamic_assert(is_valid_region_index(i,j),"Index out of range.");
-  return f[row_to_cnt(i,j)];  // use row conversion for 2D array mem_order
-}
-
-list<int>& Sudoku::candidates(int cnt) {
-  dynamic_assert(is_valid_index(cnt),"Index out of range.");
-  return cand[cnt];
-}
-
-const list<int>& Sudoku::candidates(int cnt) const {
-  dynamic_assert(is_valid_index(cnt),"Index out of range.");
-  return cand[cnt];
-}
-
-list<int>& Sudoku::candidates(int i, int j) {
-  dynamic_assert(is_valid_region_index(i,j),"Index out of range.");
-  return cand[row_to_cnt(i,j)];
-}
-
-const list<int>& Sudoku::candidates(int i, int j) const {
-  dynamic_assert(is_valid_region_index(i,j),"Index out of range.");
-  return cand[row_to_cnt(i,j)];
+  return m_cell[row_to_cnt(i,j)];  // use row conversion for 2D array mem_order
 }
 
 
@@ -302,34 +220,28 @@ int Sudoku::block_to_cnt(int i, int j) const {
   return cnt;
 }
 
-int Sudoku::region_to_cnt(int region, int i, int j) const {
-  // region ... 0: row, 1: col, 2: block
+int Sudoku::region_to_cnt(const Region region, int i, int j) const {
   // i... region index
   // j... index within region
-
-  dynamic_assert( ((region >= 0) && (region <=2)) ,"Region index out of range.");
   dynamic_assert(is_valid_region_index(i,j),"Index out of range.");
 
   int tmp;
   
   switch (region) {
   
-  case 0:
+  case Region::row:
     tmp = row_to_cnt(i,j);
     break;
 
-  case 1:
+  case Region::col:
     tmp = col_to_cnt(i,j);
     break;
 
-  case 2:
+  case Region::block:
     tmp = block_to_cnt(i,j);
     break;
 
-  default:
-    cout << "Should never reach here!\n";
-}
-  
+  }
   return tmp;
 }
 
@@ -376,33 +288,58 @@ pair<int,int> Sudoku::cnt_to_block(int cnt) const {
   return make_pair(block_idx,idx_in_block);
 }
 
-pair<int,int> Sudoku::cnt_to_region(int region, int cnt) const {
-  // region ... 0: row, 1: col, 2: block
-
-  dynamic_assert( ((region >= 0) && (region <=2)) ,"Region index out of range.");
+pair<int,int> Sudoku::cnt_to_region(const Region region, int cnt) const {
   dynamic_assert(is_valid_index(cnt),"Index out of range.");
 
   pair<int,int> tmp;
 
   switch (region) {
     
-  case 0:
+  case Region::row:
     tmp = cnt_to_row(cnt);
     break;
     
-  case 1:
+  case Region::col:
     tmp = cnt_to_col(cnt);
     break;
     
-  case 2:
+  case Region::block:
     tmp = cnt_to_block(cnt);
     break;
 
-  default:
-    cout << "Should never reach here!\n";
   }
-
   return tmp;
+}
+
+bool Sudoku::cell_is_in_affected_regions(int curr_block, int cnt) {
+  //
+  // cells are affected region if they are in rows or cols
+  // which cross the current block (and thus extend into other blocks)
+  //
+
+  // provide block indices of blocks belonging to affected regions
+  list<int> affected_blocks;
+  // blocks which are in affected region horizontally
+  for (int nb=0;nb<blocks_per_row;++nb) {
+    affected_blocks.push_back((curr_block/blocks_per_row)*blocks_per_row+nb);
+  }
+  // blocks which are in affected region vertically
+  for (int nb=0;nb<blocks_per_col;++nb) {
+    affected_blocks.push_back(curr_block%blocks_per_row+nb*blocks_per_row);
+  }
+  // next two lines just for better readability during debugging (not required for algo)
+  affected_blocks.sort();
+  affected_blocks.unique();
+  // cout << "affected blocks:\n"; print_list_int(affected_blocks);
+
+  // check whether cell m_cell[cnt] is in one of the affected blocks
+  dynamic_assert(is_valid_index(cnt),"Invalid cnt value.");
+  auto p = find(affected_blocks.begin(),affected_blocks.end(),m_cell[cnt].b);
+  if (p != affected_blocks.end()) {
+    return true;
+  }
+  
+  return false;
 }
 
 
@@ -416,67 +353,4 @@ bool Sudoku::is_valid_region_index(int i) const {
 
 bool Sudoku::is_valid_region_index(int i, int j) const {
   return ((i >= 0) && (i < region_size) && (j >= 0) && (j < region_size));
-}
-
-
-bool Sudoku::is_valid() const {
-
-  // check for valid entry values:
-  // 0 (=empty indicator, is valid too), valid entries: 1..region_size
-  for (int cnt=0;cnt < total_size;++cnt) {
-    if (f[cnt] < 0 || f[cnt] > region_size) {
-      return false;
-    }
-  }
-
-  // check for unique entries in rows
-  for (int cnt=0;cnt < region_size;++cnt) { // for each row
-    for (int value=1;value <= region_size;++value) { // for each potential value
-      int count=0;
-      for (int pos=0;pos < region_size;++pos) { // occurences at each position
-	if (row(cnt,pos) == value) ++count;
-      }
-      if (count > 1) return false;
-    }
-  }
-
-  // check for unique entries in cols
-  for (int cnt=0;cnt < region_size;++cnt) { // for each col
-    for (int value=1;value <= region_size;++value) { // for each potential value
-      int count=0;
-      for (int pos=0;pos < region_size;++pos) { // occurences at each position
-	if (col(cnt,pos) == value) ++count;
-      }
-      if (count > 1) return false;
-    }
-  }
-
-  // check for unique entries in blocks
-  for (int cnt=0;cnt < region_size;++cnt) { // for each block
-    for (int value=1;value <= region_size;++value) { // for each potential value
-      int count=0;
-      for (int pos=0;pos < region_size;++pos) { // occurences at each position
-	if (block(cnt,pos) == value) ++count;
-      }
-      if (count > 1) return false;
-    }
-  }
-
-  return true;
-}
-
-int Sudoku::num_entries() const {
-
-  // return no. of entries > 0
-  int count=0;
-  for (int cnt=0; cnt < total_size; ++cnt) {
-    if (f[cnt] > 0) ++count;
-  }
-  return count;
-}
-
-int Sudoku::num_empty() const {
-
-  // return no. of empty entries, i.e. entries with value 0
-  return total_size - num_entries();
 }

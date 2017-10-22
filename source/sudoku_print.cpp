@@ -2,6 +2,8 @@
 
 #include "sudoku_print.h"
 
+using namespace std;
+
 void sudoku_print(const Sudoku& s, const string msg) {
 
   cout << msg << ":";
@@ -9,7 +11,7 @@ void sudoku_print(const Sudoku& s, const string msg) {
     if (cnt%s.region_size == 0 ) {
       cout << "\n" << cnt/s.region_size << ": ";
     }
-    cout << setw(2) << s(cnt);
+    cout << setw(2) << s(cnt).val;
     if ((cnt+1)%s.region_size != 0) cout << ",";
   }
   cout << "\n";
@@ -22,7 +24,7 @@ void sudoku_print_regions(const Sudoku& s, const string msg) {
   for (int i=0;i < s.region_size; ++i) {
     cout << i << ": ";
     for (int j=0;j < s.region_size; ++j) {
-      cout << setw(2) << s.row(i,j);
+      cout << setw(2) << s.row(i,j).val;
       if (j < s.region_size-1) cout << ", ";
     }
     cout << "\n";
@@ -33,7 +35,7 @@ void sudoku_print_regions(const Sudoku& s, const string msg) {
   for (int i=0;i < s.region_size; ++i) {
     cout << i << ": ";
     for (int j=0;j < s.region_size; ++j) {
-      cout << setw(2) << s.col(i,j);
+      cout << setw(2) << s.col(i,j).val;
       if (j < s.region_size-1) cout << ", ";
     }
     cout << "\n";
@@ -44,7 +46,7 @@ void sudoku_print_regions(const Sudoku& s, const string msg) {
   for (int i=0;i < s.region_size; ++i) {
     cout << i << ": ";
     for (int j=0;j < s.region_size; ++j) {
-      cout << setw(2) << s.block(i,j);
+      cout << setw(2) << s.block(i,j).val;
       if (j < s.region_size-1) cout << ", ";
     }
     cout << "\n";
@@ -80,32 +82,221 @@ void sudoku_print_cnt_to_x(const Sudoku& s, const string msg) {
 }
 
 
-void sudoku_print_candidates(const Sudoku& s, const string msg) {
+void sudoku_print_candidates(const Sudoku& s, const string msg, const Region region) {
 
-  cout << msg << ", candidates:\n";
-  for (int cnt=0;cnt < s.total_size; ++cnt) {
-    cout << setw(2) << cnt << ": ";
+  int cnt;
+  
+  switch (region) {
 
-    cout << "r(" << s.cnt_to_row(cnt).first << ",";
-    cout << s.cnt_to_row(cnt).second << "), ";
-
-    cout << "c(" << s.cnt_to_col(cnt).first << ",";
-    cout << s.cnt_to_col(cnt).second << "), ";
-
-    cout << "b(" << s.cnt_to_block(cnt).first << ",";
-    cout << s.cnt_to_block(cnt).second << "): ";
+  case Region::row:
     
-    cout << "{";
-    for (auto item=s.candidates(cnt).cbegin(),
-	           end_of_list=s.candidates(cnt).cend(),
-	           last=prev(end_of_list);
-	           item!=end_of_list; ++item) {
-      cout << setw(2) << *item;
-      if (item!=last) cout << ",";
+    cout << msg << ", candidates by row:\n";
+
+    for (int i=0;i < s.region_size; ++i) {
+      for (int j=0;j < s.region_size; ++j) {
+
+	cnt = s.region_to_cnt(region,i,j);
+	
+	cout << setw(2) << cnt << ": ";
+	cout << "r(" << i << "," << j << "), ";
+	
+	cout << "c(" << s.cnt_to_col(cnt).first << ",";
+	cout << s.cnt_to_col(cnt).second << "), ";
+	
+	cout << "b(" << s.cnt_to_block(cnt).first << ",";
+	cout << s.cnt_to_block(cnt).second << "): ";
+	
+	cout << "{";
+	for (auto item=s(cnt).cand.cbegin(), end_of_list=s(cnt).cand.cend(),
+	          last=prev(end_of_list);
+	          item!=end_of_list; ++item) {
+	  cout << setw(2) << *item;
+	  if (item!=last) cout << ",";
+	}
+	cout << " }\n";
+      }
+      cout << "\n";
     }
-    cout << " }\n";
+    cout << "\n";
+
+    break;
+
+  case Region::col:
+
+    cout << msg << ", candidates by col:\n";
+  
+    for (int i=0;i < s.region_size; ++i) {
+      for (int j=0;j < s.region_size; ++j) {
+	
+	cnt = s.region_to_cnt(region,i,j);
+	
+	cout << setw(2) << cnt << ": ";
+	cout << "c(" << i << "," << j << "), ";
+	
+	cout << "r(" << s.cnt_to_row(cnt).first << ",";
+	cout << s.cnt_to_row(cnt).second << "), ";
+	
+	cout << "b(" << s.cnt_to_block(cnt).first << ",";
+	cout << s.cnt_to_block(cnt).second << "): ";
+	
+	cout << "{";
+	for (auto item=s(cnt).cand.cbegin(), end_of_list=s(cnt).cand.cend(),
+	          last=prev(end_of_list);
+	          item!=end_of_list; ++item) {
+	  cout << setw(2) << *item;
+	  if (item!=last) cout << ",";
+	}
+	cout << " }\n";
+      }
+      cout << "\n";
+    }
+    cout << "\n";
+    
+    break;
+
+  case Region::block:
+
+    cout << msg << ", candidates by block:\n";
+  
+    for (int i=0;i < s.region_size; ++i) {
+      for (int j=0;j < s.region_size; ++j) {
+	
+	cnt = s.region_to_cnt(region,i,j);
+	
+	cout << setw(2) << cnt << ": ";
+	cout << "b(" << i << "," << j << "), ";
+	
+	cout << "r(" << s.cnt_to_row(cnt).first << ",";
+	cout << s.cnt_to_row(cnt).second << "), ";
+	
+	cout << "c(" << s.cnt_to_col(cnt).first << ",";
+	cout << s.cnt_to_col(cnt).second << "): ";
+	
+	cout << "{";
+	for (auto item=s(cnt).cand.cbegin(), end_of_list=s(cnt).cand.cend(),
+	          last=prev(end_of_list);
+	          item!=end_of_list; ++item) {
+	  cout << setw(2) << *item;
+	  if (item!=last) cout << ",";
+	}
+	cout << " }\n";
+      }
+      cout << "\n";
+    }
+    cout << "\n";
+    
+    break;
   }
-  cout << "\n";
+
+}
+
+
+void sudoku_print_required(const Sudoku& s, const string msg, const Region region) {
+
+  int cnt;
+  
+  switch (region) {
+
+  case Region::row:
+    
+    cout << msg << ", required entries by row:\n";
+
+    for (int i=0;i < s.region_size; ++i) {
+      for (int j=0;j < s.region_size; ++j) {
+
+	cnt = s.region_to_cnt(region,i,j);
+	
+	cout << setw(2) << cnt << ": ";
+	cout << "r(" << i << "," << j << "), ";
+	
+	cout << "c(" << s.cnt_to_col(cnt).first << ",";
+	cout << s.cnt_to_col(cnt).second << "), ";
+	
+	cout << "b(" << s.cnt_to_block(cnt).first << ",";
+	cout << s.cnt_to_block(cnt).second << "): ";
+	
+	cout << "{";
+	for (auto item=s(cnt).rqrd.cbegin(), end_of_list=s(cnt).rqrd.cend(),
+	          last=prev(end_of_list);
+	          item!=end_of_list; ++item) {
+	  cout << setw(2) << *item;
+	  if (item!=last) cout << ",";
+	}
+	cout << " }\n";
+      }
+      cout << "\n";
+    }
+    cout << "\n";
+
+    break;
+
+  case Region::col:
+
+    cout << msg << ", required enries by col:\n";
+  
+    for (int i=0;i < s.region_size; ++i) {
+      for (int j=0;j < s.region_size; ++j) {
+	
+	cnt = s.region_to_cnt(region,i,j);
+	
+	cout << setw(2) << cnt << ": ";
+	cout << "c(" << i << "," << j << "), ";
+	
+	cout << "r(" << s.cnt_to_row(cnt).first << ",";
+	cout << s.cnt_to_row(cnt).second << "), ";
+	
+	cout << "b(" << s.cnt_to_block(cnt).first << ",";
+	cout << s.cnt_to_block(cnt).second << "): ";
+	
+	cout << "{";
+	for (auto item=s(cnt).rqrd.cbegin(), end_of_list=s(cnt).rqrd.cend(),
+	          last=prev(end_of_list);
+	          item!=end_of_list; ++item) {
+	  cout << setw(2) << *item;
+	  if (item!=last) cout << ",";
+	}
+	cout << " }\n";
+      }
+      cout << "\n";
+    }
+    cout << "\n";
+    
+    break;
+
+  case Region::block:
+
+    cout << msg << ", required entries by block:\n";
+  
+    for (int i=0;i < s.region_size; ++i) {
+      for (int j=0;j < s.region_size; ++j) {
+	
+	cnt = s.region_to_cnt(region,i,j);
+	
+	cout << setw(2) << cnt << ": ";
+	cout << "b(" << i << "," << j << "), ";
+	
+	cout << "r(" << s.cnt_to_row(cnt).first << ",";
+	cout << s.cnt_to_row(cnt).second << "), ";
+	
+	cout << "c(" << s.cnt_to_col(cnt).first << ",";
+	cout << s.cnt_to_col(cnt).second << "): ";
+	
+	cout << "{";
+	for (auto item=s(cnt).rqrd.cbegin(), end_of_list=s(cnt).rqrd.cend(),
+	          last=prev(end_of_list);
+	          item!=end_of_list; ++item) {
+	  cout << setw(2) << *item;
+	  if (item!=last) cout << ",";
+	}
+	cout << " }\n";
+      }
+      cout << "\n";
+    }
+    cout << "\n";
+    
+    break;
+  }
+
 }
 
 
