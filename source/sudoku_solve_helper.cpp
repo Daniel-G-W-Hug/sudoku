@@ -1,4 +1,4 @@
-// 345678901234567890123456789012345678901234567890123456789012345678901234567890
+//345678901234567890123456789012345678901234567890123456789012345678901234567890
 
 #include "sudoku_solve_helper.h"
 #include "sudoku_print.h"
@@ -7,16 +7,9 @@
 
 using namespace std;
 
-// remove all values in list remove_values from list remove_target
-void remove_from_list_int(list<int> &remove_target,
-                          const list<int> &remove_values) {
-  // remove all values provided in list remove_values from remove_target
-  for (auto vp = remove_values.begin(); vp != remove_values.end(); ++vp) {
-    remove_target.remove(*vp);
-  }
-}
-
+////////////////////////////////////////////////////////////////////////////////
 // check for valid and unique entries in region
+////////////////////////////////////////////////////////////////////////////////
 bool sudoku_has_unique_entries_in_region(const Sudoku &s,
                                          const Region_t region) {
   for (int i = 0; i < s.region_size; ++i) { // for each row / col / block
@@ -35,30 +28,33 @@ bool sudoku_has_unique_entries_in_region(const Sudoku &s,
   return true;
 }
 
+////////////////////////////////////////////////////////////////////////////////
 // concatenate candidate lists in subregion
-list<int> sudoku_concatenate_candidate_lists_in_subregion(const Sudoku &s,
-                                                          const Region_t region,
-                                                          const int subregion) {
-  list<int> concatenated_list{};
+////////////////////////////////////////////////////////////////////////////////
+multiset<int> sudoku_concatenate_candidate_sets_in_subregion(const Sudoku &s,
+							     const Region_t region,
+							     const int subregion) {
+  multiset<int> concatenated_sets{};
   for (int j = 0; j < s.region_size; ++j) { // for each cell in subregion
     int cnt = s.region_to_cnt(region, subregion, j);
     if (s(cnt).val == 0) { // if cell is empty, there should be candidates
-      concatenated_list.insert(concatenated_list.end(), s(cnt).cand.begin(),
-                               s(cnt).cand.end());
+      concatenated_sets.insert(s(cnt).cand.begin(), s(cnt).cand.end());
     }
   }
-  // cout << "concatenated cand lists: ";
-  // print_list_int(concatenated_list);
+  // cout << "concatenated cand sets: ";
+  // print_multiset_int(concatenated_sets);
 
-  return concatenated_list;
+  return concatenated_sets;
 }
 
-// count how often which sudoku entry (1 .. s.region_size) occurs in list
+////////////////////////////////////////////////////////////////////////////////
+// count how often which sudoku entry (1 .. s.region_size) occurs in multiset
+////////////////////////////////////////////////////////////////////////////////
 vector<int> sudoku_count_candidate_entries(const Sudoku &s,
-                                           const std::list<int> &input_list) {
+                                           const std::multiset<int> &input_multiset) {
   vector<int> candidate_count{};
   for (int j = 1; j <= s.region_size; ++j) {
-    candidate_count.push_back(count(input_list.begin(), input_list.end(), j));
+    candidate_count.push_back(input_multiset.count(j));
   }
   // cout << "candidate_count:         ";
   // print_vector_int(candidate_count);
@@ -66,7 +62,9 @@ vector<int> sudoku_count_candidate_entries(const Sudoku &s,
   return candidate_count;
 }
 
+////////////////////////////////////////////////////////////////////////////////
 // store index where elements occur in current subregion (index i)
+////////////////////////////////////////////////////////////////////////////////
 vector<list<int>>
 sudoku_candidate_positions_in_subregion(const Sudoku &s, const Region_t region,
                                         const int subregion,
@@ -81,7 +79,7 @@ sudoku_candidate_positions_in_subregion(const Sudoku &s, const Region_t region,
       int cnt = s.region_to_cnt(region, subregion, k);
       if (s(cnt).val == 0 &&        // has candidate list
           candidate_count[j] > 0 && // element does occur in region
-          count(s(cnt).cand.begin(), s(cnt).cand.end(), value) > 0) {
+          s(cnt).cand.count(value) > 0) {
         lp.push_back(k);
       }
     }
@@ -94,11 +92,17 @@ sudoku_candidate_positions_in_subregion(const Sudoku &s, const Region_t region,
   return candidate_pos;
 }
 
-// identify hidden twins in subregion (index i)
+////////////////////////////////////////////////////////////////////////////////
+// identify hidden singles in subregion (index i)
+//
+// hidden single: candidate sets in a region contain a value only once
+//                this is a hidden single, since each region must have
+//                all permissible values
+////////////////////////////////////////////////////////////////////////////////
 tuple<int, vector<int>, vector<int>>
 identify_hidden_singles_in_subregion(const Sudoku &s, const Region_t region,
                                      const int subregion) {
-  list<int> lh{};               // helper list to count candidates
+  multiset<int> ms{};           // helper multiset to count candidates
   vector<int> cand_count{};     // candidate occurrance count
   vector<list<int>> cand_pos{}; // candidate position index
 
@@ -107,10 +111,10 @@ identify_hidden_singles_in_subregion(const Sudoku &s, const Region_t region,
   vector<int> hidden_single_pos{};
 
   // concatenate candidate lists in current subregion
-  lh = sudoku_concatenate_candidate_lists_in_subregion(s, region, subregion);
+  ms = sudoku_concatenate_candidate_sets_in_subregion(s, region, subregion);
 
-  // count how often which entry occurs in candidate list
-  cand_count = sudoku_count_candidate_entries(s, lh);
+  // count how often which entry occurs in candidate sets
+  cand_count = sudoku_count_candidate_entries(s, ms);
 
   // store index where elements occur in current subregion (index i)
   cand_pos =
@@ -137,11 +141,18 @@ identify_hidden_singles_in_subregion(const Sudoku &s, const Region_t region,
                     hidden_single_pos);
 }
 
+////////////////////////////////////////////////////////////////////////////////
 // identify naked twins in subregion (index i)
+//
+// naked twin: Candidate sets of two cells in a region have the same two
+//             entries. Since these two cells must have those values,
+//             these candidate values can be removed in all other candidate
+//             sets of this region.
+////////////////////////////////////////////////////////////////////////////////
 tuple<int, vector<list<int>>, vector<list<int>>>
 identify_naked_twins_in_subregion(const Sudoku &s, const Region_t region,
                                   const int subregion) {
-  list<int> lh{};           // helper list to count candidates
+  multiset<int> ms{};       // helper multiset to count candidates
   vector<int> cand_count{}; // candidate occurrance count
 
   int num_naked_twins_in_subregion = 0;
@@ -149,10 +160,10 @@ identify_naked_twins_in_subregion(const Sudoku &s, const Region_t region,
   vector<list<int>> twin_pos{};
 
   // concatenate candidate lists in current subregion
-  lh = sudoku_concatenate_candidate_lists_in_subregion(s, region, subregion);
+  ms = sudoku_concatenate_candidate_sets_in_subregion(s, region, subregion);
 
   // count how often which entry occurs in candidate list
-  cand_count = sudoku_count_candidate_entries(s, lh);
+  cand_count = sudoku_count_candidate_entries(s, ms);
 
   for (int j = 0; j < s.region_size; ++j) {
     int cnt = s.region_to_cnt(region, subregion, j);
@@ -162,15 +173,18 @@ identify_naked_twins_in_subregion(const Sudoku &s, const Region_t region,
         int cnt_k = s.region_to_cnt(region, subregion, k);
         if (s(cnt_k).val == 0 && s(cnt_k).cand.size() == 2 &&
             s(cnt).cand == s(cnt_k).cand &&
-            (cand_count[s(cnt).cand.front() - 1] > 2 ||
-             cand_count[s(cnt).cand.back() - 1] > 2)) {
+            (cand_count[*(     s(cnt).cand.cbegin() ) - 1] > 2 ||
+             cand_count[*(next(s(cnt).cand.cbegin())) - 1] > 2)) {
           // naked twin found
           ++num_naked_twins_in_subregion;
-          twin_values.push_back(s(cnt).cand);
-          list<int> lh;
-          lh.push_back(j);
-          lh.push_back(k);
-          twin_pos.push_back(lh);
+          list<int> lh1;
+          lh1.push_back(*(     s(cnt).cand.cbegin() ));
+	  lh1.push_back(*(next(s(cnt).cand.cbegin())));
+          twin_values.push_back(lh1);
+          list<int> lh2;
+          lh2.push_back(j);
+          lh2.push_back(k);
+          twin_pos.push_back(lh2);
         }
       }
     }
@@ -179,11 +193,21 @@ identify_naked_twins_in_subregion(const Sudoku &s, const Region_t region,
   return make_tuple(num_naked_twins_in_subregion, twin_values, twin_pos);
 }
 
+////////////////////////////////////////////////////////////////////////////////
 // identify hidden twins in subregion (index i)
+//
+// hidden twin:
+//
+// if two values occur only twice in the same region and if those two values
+// occur in two cells together exclusively, then all other candiates in those
+// two cells' candidate sets can be removed, because the two values can only
+// occur in these two cells (defined location)
+//
+////////////////////////////////////////////////////////////////////////////////
 tuple<int, vector<list<int>>, vector<list<int>>>
 identify_hidden_twins_in_subregion(const Sudoku &s, const Region_t region,
                                    const int subregion) {
-  list<int> lh{};               // helper list to count candidates
+  multiset<int> ms{};           // helper multiset to count candidates
   vector<int> cand_count{};     // candidate occurrance count
   vector<list<int>> cand_pos{}; // candidate position index
 
@@ -192,10 +216,10 @@ identify_hidden_twins_in_subregion(const Sudoku &s, const Region_t region,
   vector<list<int>> twin_pos{};
 
   // concatenate candidate lists in current subregion
-  lh = sudoku_concatenate_candidate_lists_in_subregion(s, region, subregion);
+  ms = sudoku_concatenate_candidate_sets_in_subregion(s, region, subregion);
 
   // count how often which entry occurs in candidate list
-  cand_count = sudoku_count_candidate_entries(s, lh);
+  cand_count = sudoku_count_candidate_entries(s, ms);
 
   // store index where elements occur in current subregion (index i)
   cand_pos =

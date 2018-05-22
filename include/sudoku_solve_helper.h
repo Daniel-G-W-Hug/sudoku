@@ -4,8 +4,10 @@
 #pragma once
 
 #include <list>
+#include <set>
 #include <tuple>
 #include <vector>
+#include <iterator> // prev(), next()
 
 #include "sudoku_class.h"
 
@@ -14,29 +16,25 @@
 // "sudoku_solve.cpp"
 //
 
-// remove all values in list remove_values from list remove_target
-void remove_from_list_int(std::list<int> &remove_target,
-                          const std::list<int> &remove_values);
-
 // check for valid and unique entries in region
 bool sudoku_has_unique_entries_in_region(const Sudoku &s,
                                          const Region_t region);
 
-// concatenate candidate lists in subregion
-std::list<int> sudoku_concatenate_candidate_lists_in_subregion(
+// concatenate candidate sets in subregion
+std::multiset<int> sudoku_concatenate_candidate_sets_in_subregion(
     const Sudoku &s, const Region_t region, const int subregion);
 
 // count how often which sudoku entry occurs in list
 std::vector<int>
 sudoku_count_candidate_entries(const Sudoku &s,
-                               const std::list<int> &input_list);
+                               const std::multiset<int> &input_multiset);
 
 // store index where elements occur in current subregion
 std::vector<list<int>> sudoku_candidate_positions_in_subregion(
     const Sudoku &s, const Region_t region, const int subregion,
     const std::vector<int> &candidate_count);
 
-// identify hidden twins in subregion
+// identify hidden singles in subregion
 std::tuple<int, std::vector<int>, std::vector<int>>
 identify_hidden_singles_in_subregion(const Sudoku &s, const Region_t region,
                                      const int subregion);

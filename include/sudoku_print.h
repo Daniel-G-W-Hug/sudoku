@@ -7,6 +7,11 @@
 #include <iostream>
 #include <string>
 #include <utility> // pair<T,T>().first/.second
+#include <list>
+#include <set>
+#include <vector>
+#include <iterator> // prev(), next()
+
 
 #include "sudoku_class.h"
 

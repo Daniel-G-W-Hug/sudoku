@@ -72,7 +72,7 @@ int main(int argc, char *argv[]) {
   cout << "\n\n";
   sudoku_print_candidates(s, "s", Region_t::block);
   cout << "\n\n";
-
+  
   sudoku_print(s, "s");
   cout << "\n\n";
   sudoku_print_status(s, "s");

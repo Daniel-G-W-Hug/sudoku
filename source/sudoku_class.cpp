@@ -4,6 +4,7 @@
 #include "sudoku_print.h" // only for debugging
 
 #include <algorithm>
+#include <list>   // only for function cell_is_in_affected_regions()
 
 using namespace std;
 
@@ -82,7 +83,7 @@ Sudoku::Sudoku(int t_region_size, int t_blocks_per_row, int t_blocks_per_col)
                  "Invalid Sudoku parameters.");
 
   // initialize empty Sudoku incl. region assignment
-  // and candidate list for each cell
+  // and candidate set for each cell
 
   for (int cnt = 0; cnt < total_size; ++cnt) {
     // create new cell (empty by default, i.e. sc.val = 0)
@@ -92,7 +93,7 @@ Sudoku::Sudoku(int t_region_size, int t_blocks_per_row, int t_blocks_per_col)
                    cnt_to_block(cnt).first, cnt_to_block(cnt).second);
 
     for (int i = 1; i <= region_size; ++i) {
-      sc.cand.push_back(i); // all candidates possible
+      sc.cand.insert(i); // all candidates possible
     }
 
     m_cell.push_back(sc);
@@ -127,7 +128,7 @@ Sudoku::Sudoku(const Sudoku &other_Sudoku)
                    other_Sudoku.cnt_to_block(cnt).first,
                    other_Sudoku.cnt_to_block(cnt).second);
 
-    // copy value and candidate list from other_Sudoku
+    // copy value and candidate set from other_Sudoku
     sc.val = other_Sudoku.m_cell[cnt].val;
     sc.cand = other_Sudoku.m_cell[cnt].cand;
 
@@ -168,7 +169,7 @@ Sudoku &Sudoku::operator=(const Sudoku &other_Sudoku) {
                    other_Sudoku.cnt_to_block(cnt).first,
                    other_Sudoku.cnt_to_block(cnt).second);
 
-    // copy value and candidate list from other_Sudoku
+    // copy value and candidate set from other_Sudoku
     sc.val = other_Sudoku.m_cell[cnt].val;
     sc.cand = other_Sudoku.m_cell[cnt].cand;
 

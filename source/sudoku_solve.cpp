@@ -10,17 +10,18 @@
 using namespace std;
 
 //
-// routines to update sudoku candidate list
+// routines to update sudoku candidate set
 //
 
 void sudoku_update_candidates_cell(Sudoku &s, int cnt) {
   dynamic_assert(s.is_valid_index(cnt), "Index out of range.");
   //
-  // if the cell has an entry != 0 the candidate list must be cleared
+  // if the cell has an entry != 0 the candidate set must be cleared
   //
-  // if the cell has an entry == 0 the candidate list must be updated:
+  // if the cell has an entry == 0 the candidate set must be updated:
   //   each cell entry value != 0 that occurs in a row, col, or block
-  //   the cell belongs to has to be removed from the cell's candidate list
+  //   the cell belongs to has to be removed from the cell's candidate
+  //   set
   //
 
   if (s(cnt).val != 0) {
@@ -29,52 +30,52 @@ void sudoku_update_candidates_cell(Sudoku &s, int cnt) {
     return;
   }
 
-  // from here on s(cnt) == 0, i.e. empty cells that should have candidate lists
+  // from here on s(cnt) == 0, i.e. empty cells that should have candidate sets
 
-  // remove all values ocurring in curr_row from candidate list
+  // remove all values ocurring in curr_row from candidate set
   int curr_row = s(cnt).ri;
   for (int j = 0; j < s.region_size; ++j) {
     int value = s.row(curr_row, j).val;
     if (value > 0)
-      s(cnt).cand.remove(value);
+      s(cnt).cand.erase(value);
   }
 
-  // remove all values ocurring in curr_col from candidate list
+  // remove all values ocurring in curr_col from candidate set
   int curr_col = s(cnt).ci;
   for (int j = 0; j < s.region_size; ++j) {
     int value = s.col(curr_col, j).val;
     if (value > 0)
-      s(cnt).cand.remove(value);
+      s(cnt).cand.erase(value);
   }
 
-  // remove all values ocurring in curr_block from candidate list
+  // remove all values ocurring in curr_block from candidate set
   int curr_block = s(cnt).bi;
   for (int j = 0; j < s.region_size; ++j) {
     int value = s.block(curr_block, j).val;
     if (value > 0)
-      s(cnt).cand.remove(value);
+      s(cnt).cand.erase(value);
   }
 }
 
 void sudoku_update_candidates_affected_by_cell(Sudoku &s, int cnt) {
   dynamic_assert(s.is_valid_index(cnt), "Index out of range.");
   //
-  // update all candidate lists of cells in the regions the cell(cnt) belongs to
+  // update all candidate sets of cells in the regions the cell(cnt) belongs to
   //
 
-  // update candidate lists of all cells in curr_row
+  // update candidate sets of all cells in curr_row
   int curr_row = s(cnt).ri;
   for (int j = 0; j < s.region_size; ++j) {
     sudoku_update_candidates_cell(s, s.row_to_cnt(curr_row, j));
   }
 
-  // update candidate lists of all cells in curr_col
+  // update candidate sets of all cells in curr_col
   int curr_col = s(cnt).ci;
   for (int j = 0; j < s.region_size; ++j) {
     sudoku_update_candidates_cell(s, s.col_to_cnt(curr_col, j));
   }
 
-  // update candidate lists of all cells in curr_block
+  // update candidate sets of all cells in curr_block
   int curr_block = s(cnt).bi;
   for (int j = 0; j < s.region_size; ++j) {
     sudoku_update_candidates_cell(s, s.block_to_cnt(curr_block, j));
@@ -129,7 +130,7 @@ int sudoku_num_candidates(const Sudoku &s) {
   if (sudoku_num_empty(s) == 0)
     return num_candidates;
 
-  // for all entries == 0 candidates available, if size of candidate list > 0
+  // for all entries == 0 candidates available, if size of candidate set > 0
   for (int cnt = 0; cnt < s.total_size; ++cnt) {
     if (s(cnt).val == 0 && s(cnt).cand.size() == 0)
       return num_candidates;
@@ -165,12 +166,9 @@ bool sudoku_has_naked_singles(const Sudoku &s) {
 }
 
 int num_hidden_singles_in_region(const Sudoku &s, const Region_t region) {
-  // hidden single: candidate lists in a region contain a value only once
+  // hidden single: candidate sets in a region contain a value only once
   //                this is a hidden single, since each region must have
   //                all permissible values
-
-  list<int> lh{};           // helper list to count candidates
-  vector<int> cand_count{}; // candidate occurrance count
 
   int num_hidden_singles_in_region = 0;
   int count = 0;
@@ -201,10 +199,10 @@ bool sudoku_has_hidden_singles(const Sudoku &s) {
 
 int sudoku_num_naked_twins_in_region(const Sudoku &s, const Region_t region) {
   //
-  // naked twin: Candidate lists of two cells in a region have the same two
+  // naked twin: Candidate sets of two cells in a region have the same two
   //             entries. Since these two cells must have those values,
   //             these candidate values can be removed in all other candidate
-  //             lists of this region.
+  //             sets of this region.
   //
 
   int num_naked_twins_in_region = 0;
@@ -239,7 +237,7 @@ int sudoku_num_hidden_twins_in_region(const Sudoku &s, const Region_t region) {
   //
   // if two values occur only twice in the same region and if those two values
   // occur in two cells together exclusively, then all other candiates in those
-  // two cells' candidate lists can be removed, because the two values can only
+  // two cells' candidate sets can be removed, because the two values can only
   // occur in these two cells (defined location)
   //
 
@@ -276,7 +274,7 @@ int sudoku_remove_naked_singles(
 
   for (int cnt = 0; cnt < s.total_size; ++cnt) {
     if (s(cnt).val == 0 && s(cnt).cand.size() == 1) {
-      s(cnt).val = s(cnt).cand.front();
+      s(cnt).val = *( s(cnt).cand.cbegin() );
       ++num_naked_singles_removed;
       sudoku_update_candidates_affected_by_cell(s, cnt);
      }
@@ -286,7 +284,7 @@ int sudoku_remove_naked_singles(
 }
 
 int sudoku_remove_hidden_singles_in_region(Sudoku &s, const Region_t region) {
-  // hidden single: candidate lists in a region contain a value only once
+  // hidden single: candidate sets in a region contain a value only once
   //                this is a hidden single, since each region must have
   //                all permissible values
 
@@ -331,10 +329,10 @@ int sudoku_remove_hidden_singles(Sudoku &s) {
 
 int sudoku_remove_naked_twins_in_region(Sudoku &s, const Region_t region) {
   //
-  // naked twin: Candidate lists of two cells in a region have the same two
+  // naked twin: Candidate sets of two cells in a region have the same two
   //             entries. Since these two cells have those values,
-  //             The candidate values can be removed in all other candidate
-  //             lists of this region.
+  //             the candidate values can be removed in all other candidate
+  //             sets of this region.
   //
 
   int num_naked_twins_removed_in_region = 0;
@@ -359,15 +357,18 @@ int sudoku_remove_naked_twins_in_region(Sudoku &s, const Region_t region) {
     //   cout << "\n";
     // }
 
-    // remove twins from candidate list of other cells
+    // remove twins from candidate set of other cells
     for (size_t t_cnt = 0; t_cnt < twin_values.size(); ++t_cnt) {
       for (int j = 0; j < s.region_size; ++j) {
         int cnt = s.region_to_cnt(region, i, j);
         if (s(cnt).val == 0 &&
-            none_of(twin_pos[t_cnt].begin(), twin_pos[t_cnt].end(),
+          none_of(twin_pos[t_cnt].begin(), twin_pos[t_cnt].end(),
                     [j](int i) { return i == j; })) {
-          // only remove if other cell in region
-          remove_from_list_int(s(cnt).cand, twin_values[t_cnt]);
+          // only remove twin values if other cell in region
+	  for (auto vp = twin_values[t_cnt].begin();
+	       vp != twin_values[t_cnt].end(); ++vp) {
+	    s(cnt).cand.erase(*vp);
+	  }
         }
       }
       ++num_naked_twins_removed_in_region;
@@ -395,7 +396,7 @@ int sudoku_remove_hidden_twins_in_region(Sudoku &s, const Region_t region) {
   //
   // if two values occur only twice in the same region and if those two values
   // occur in two cells together exclusively, then all other candiates in those
-  // two cells' candidate lists can be removed, because the two values can only
+  // two cells' candidate sets can be removed, because the two values can only
   // occur in these two cells (defined location)
   //
 
@@ -411,14 +412,18 @@ int sudoku_remove_hidden_twins_in_region(Sudoku &s, const Region_t region) {
     tie(ignore, twin_values, twin_pos) =
         identify_hidden_twins_in_subregion(s, region, i);
 
-    // to remove other candidates from list,
-    // replace candidate list at twin positions with twin values,
+    // to remove other candidates from set,
+    // replace candidate set at twin positions with twin values,
     // effectively removing all other entries
     for (size_t k = 0; k < twin_values.size(); ++k) {
       int cnt1 = s.region_to_cnt(region, i, twin_pos[k].front());
       int cnt2 = s.region_to_cnt(region, i, twin_pos[k].back());
-      s(cnt1).cand = twin_values[k];
-      s(cnt2).cand = twin_values[k];
+      s(cnt1).cand.clear();
+      s(cnt1).cand.insert(twin_values[k].front());
+      s(cnt1).cand.insert(twin_values[k].back());
+      s(cnt2).cand.clear();
+      s(cnt2).cand.insert(twin_values[k].front());
+      s(cnt2).cand.insert(twin_values[k].back());
     }
   }
 

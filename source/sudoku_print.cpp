@@ -109,14 +109,11 @@ void sudoku_print_candidates(const Sudoku &s, const string msg,
         cout << s.cnt_to_block(cnt).second << "): ";
 
         cout << "{";
-        for (auto item = s(cnt).cand.cbegin(), end_of_list = s(cnt).cand.cend(),
-                  last = prev(end_of_list);
-             item != end_of_list; ++item) {
-          cout << setw(2) << *item;
-          if (item != last)
-            cout << ",";
+        for (auto item = s(cnt).cand.cbegin(), end_of_set = s(cnt).cand.cend();
+             item != end_of_set; ++item) {
+          cout << setw(2) << *item << " ";
         }
-        cout << " }\n";
+        cout << "}\n";
       }
       cout << "\n";
     }
@@ -142,14 +139,11 @@ void sudoku_print_candidates(const Sudoku &s, const string msg,
         cout << s.cnt_to_block(cnt).second << "): ";
 
         cout << "{";
-        for (auto item = s(cnt).cand.cbegin(), end_of_list = s(cnt).cand.cend(),
-                  last = prev(end_of_list);
-             item != end_of_list; ++item) {
-          cout << setw(2) << *item;
-          if (item != last)
-            cout << ",";
-        }
-        cout << " }\n";
+        for (auto item = s(cnt).cand.cbegin(), end_of_set = s(cnt).cand.cend();
+             item != end_of_set; ++item) {
+          cout << setw(2) << *item << " ";
+	}
+        cout << "}\n";
       }
       cout << "\n";
     }
@@ -175,14 +169,11 @@ void sudoku_print_candidates(const Sudoku &s, const string msg,
         cout << s.cnt_to_col(cnt).second << "): ";
 
         cout << "{";
-        for (auto item = s(cnt).cand.cbegin(), end_of_list = s(cnt).cand.cend(),
-                  last = prev(end_of_list);
-             item != end_of_list; ++item) {
-          cout << setw(2) << *item;
-          if (item != last)
-            cout << ",";
+        for (auto item = s(cnt).cand.cbegin(), end_of_set = s(cnt).cand.cend();
+             item != end_of_set; ++item) {
+          cout << setw(2) << *item << " ";
         }
-        cout << " }\n";
+        cout << "}\n";
       }
       cout << "\n";
     }

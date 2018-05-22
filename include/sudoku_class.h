@@ -5,7 +5,7 @@
 
 #include "dyn_assert.h" // dynamic_assert()
 #include <iostream>
-#include <list>
+#include <set>
 #include <string>
 #include <utility> // pair<T,T>(), make_pair()
 #include <vector>
@@ -23,7 +23,7 @@ struct Sudoku_cell {
   const int cj;          // index within the cell's col
   const int bi;          // block index the cell belongs to
   const int bj;          // index within the cell's block
-  std::list<int> cand{}; // list of remaining candidates for this cell
+  std::set<int> cand{};  // set of remaining candidates for this cell
                          // (=remaining permissible entries)
 };
 
